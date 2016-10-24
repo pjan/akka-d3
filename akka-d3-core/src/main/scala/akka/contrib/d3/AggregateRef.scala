@@ -44,10 +44,13 @@ protected[d3] class AggregateRef[A <: AggregateLike](
     askableAggregateManager.ask(AggregateManager.CommandMessage(identifier, cmd))(askTimeout).mapTo[Either[Throwable, Events]]
   def ?(cmd: Command): Future[Either[Throwable, Events]] = ask(cmd)
 
-  def getState(): Future[Either[Throwable, Aggregate]] =
+  def state: Future[Either[Throwable, Aggregate]] =
     askableAggregateManager.ask(AggregateManager.GetState(identifier))(askTimeout).mapTo[Either[Throwable, Aggregate]]
 
-  def exists(): Future[Boolean] =
-    askableAggregateManager.ask(AggregateManager.Exists(identifier))(askTimeout).mapTo[Boolean]
+  def exists(p: Aggregate ⇒ Boolean): Future[Boolean] =
+    askableAggregateManager.ask(AggregateManager.Exists(identifier, p))(askTimeout).mapTo[Boolean]
+
+  def isInitialized: Future[Boolean] =
+    exists(_ ⇒ true)
 
 }

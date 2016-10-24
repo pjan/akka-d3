@@ -8,7 +8,7 @@ import scala.util.Try
 private[d3] object AggregateManager {
   sealed trait AggregateQuery
   @SerialVersionUID(1L) final case class GetState(id: AggregateId) extends AggregateQuery
-  @SerialVersionUID(1L) final case class Exists(id: AggregateId) extends AggregateQuery
+  @SerialVersionUID(1L) final case class Exists[A <: AggregateLike](id: AggregateId, pred: A ⇒ Boolean) extends AggregateQuery
   @SerialVersionUID(1L) final case class CommandMessage(id: AggregateId, command: DomainCommand)
   @SerialVersionUID(1L) final case class RequestPassivation(stopMessage: Any)
 
@@ -67,12 +67,12 @@ private[d3] class AggregateManager[A <: AggregateLike](
   def receiveQuery: Receive = {
     case GetState(ValidId(id)) ⇒
       getAggregate(id).tell(AggregateActor.GetState(sender()), sender())
-    case Exists(ValidId(id)) ⇒
-      getAggregate(id).tell(AggregateActor.Exists(sender()), sender())
+    case Exists(ValidId(id), p: (Aggregate ⇒ Boolean) @unchecked) ⇒
+      getAggregate(id).tell(AggregateActor.Exists(sender(), p), sender())
     case GetState(InvalidId(id)) ⇒
       log.debug("Invalid id: {}", id)
       sender ! Left(new IllegalArgumentException(s"Invalid id type: ${id.getClass.getSimpleName}"))
-    case Exists(InvalidId(id)) ⇒
+    case Exists(InvalidId(id), _) ⇒
       log.debug("Invalid id: {}", id)
       sender ! Left(new IllegalArgumentException(s"Invalid id type: ${id.getClass.getSimpleName}"))
   }

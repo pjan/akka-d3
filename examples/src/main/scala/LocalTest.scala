@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.contrib.d3._
 import com.typesafe.config.ConfigFactory
 
+import scala.concurrent.Future
 import scala.util.{Failure, Random, Success}
 
 object LocalTest extends App {
@@ -24,25 +25,35 @@ object LocalTest extends App {
 
   Thread.sleep(8000)
 
-  val aggregate = Domain(system).aggregateRef[Invoice](Invoice.Id(s"${Random.nextInt(100000)}"))
+  val aggregates = List.fill(1000){ Random.nextInt(100000) }.map { id ⇒ Domain(system).aggregateRef[Invoice](Invoice.Id(s"$id")) }
 
-  val result = for {
-    e1 ← aggregate ? InvoiceProtocol.InvoiceCommand.Create(Invoice.Amount(BigDecimal(200)))
-    s1 ← aggregate.getState()
-    e2 ← aggregate ? InvoiceProtocol.InvoiceCommand.Close("paid")
-    s2 ← aggregate.getState()
-  } yield (e1, s1, e2, s2)
+  val result = Future.sequence {
+    aggregates.map(aggregate ⇒
+      for {
+        e1 ← aggregate ? InvoiceProtocol.InvoiceCommand.Create(Invoice.Amount(BigDecimal(200)))
+        s1 ← aggregate.state
+        e2 ← aggregate ? InvoiceProtocol.InvoiceCommand.Close("paid")
+        s2 ← aggregate.state
+        q3 ← aggregate.exists(_.amount.value == BigDecimal(200))
+        q4 ← aggregate.isInitialized
+      } yield (e1, s1, e2, s2, q3, q4))
+  }
 
   result.onComplete {
-    case Success((e1, s1, e2, s2)) ⇒
-      println(
-        s"""
-           |1. events: $e1
-           |   state:  $s1
-           |2. events: $e2
-           |   state:  $s2
+    case Success(l) ⇒
+      l.foreach {
+        case (e1, s1, e2, s2, q3, q4) ⇒
+          println(
+            s"""
+               |1. events:       $e1
+               |   state:        $s1
+               |2. events:       $e2
+               |   state:        $s2
+               |3. amnt == 200?: $q3
+               |4. initialized?: $q4
        """.stripMargin
-      )
+          )
+      }
       Thread.sleep(10000)
       system.terminate()
     case Failure(exception) ⇒
