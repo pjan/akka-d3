@@ -39,6 +39,7 @@ object LocalTest extends App {
       } yield (e1, s1, e2, s2, q3, q4))
   }
 
+  // scalastyle:off
   result.onComplete {
     case Success(l) ⇒
       l.foreach {
@@ -61,4 +62,5 @@ object LocalTest extends App {
       Thread.sleep(10000)
       system.terminate()
   }
+  // scalastyle:on
 }
