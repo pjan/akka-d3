@@ -83,7 +83,7 @@ lazy val sharedReleaseProcess = Seq(
     checkSnapshotDependencies,
     inquireVersions,
     runClean,
-    releaseStepCommand("validate"),
+    releaseStepCommand("build"),
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
@@ -253,6 +253,13 @@ lazy val D = new {
 // Projects
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+lazy val d3 = project.in(file("."))
+  .settings(moduleName := "root")
+  .settings(d3Settings)
+  .settings(noPublishSettings)
+  .aggregate(core, cluster)
+  .dependsOn(core, cluster)
+
 lazy val core = Project(
     id = "core",
     base = file("akka-d3-core")
@@ -307,6 +314,8 @@ lazy val examples = Project(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Commands
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
 addCommandAlias("build", ";clean;scalariformFormat;scalastyle;test")
 
