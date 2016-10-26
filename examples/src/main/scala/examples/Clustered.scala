@@ -1,3 +1,5 @@
+package examples
+
 import akka.actor.ActorSystem
 import akka.cluster.Cluster
 import akka.contrib.d3._
@@ -6,7 +8,7 @@ import com.typesafe.config.ConfigFactory
 import scala.concurrent.Future
 import scala.util.{Failure, Random, Success}
 
-object ClusterTest extends App {
+object Clustered extends App {
 
   val config = ConfigFactory.parseString(
     s"""

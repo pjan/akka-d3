@@ -34,6 +34,11 @@ lazy val noPublishSettings = Seq(
   publishArtifact := false
 )
 
+lazy val noTests = Seq(
+  test in test := { },
+  coverageEnabled := false
+)
+
 lazy val publishSettings = Seq(
   homepage := Some(url("https://github.com/pjan/akka-d3")),
   licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
@@ -153,6 +158,7 @@ lazy val promptSettings = Seq(
 lazy val scoverageSettings = Seq(
   coverageMinimum := 60,
   coverageFailOnMinimum := false,
+  coverageExcludedPackages := ".*generated.*;.*protobuf.*;.*examples.*",
   // don't include scoverage as a dependency in the pom
   // see issue #980
   // this code was copied from https://github.com/mongodb/mongo-spark
@@ -296,6 +302,7 @@ lazy val examples = Project(
   .settings(d3Settings)
   .settings(commonJvmSettings)
   .settings(noPublishSettings)
+  .settings(noTests)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Commands

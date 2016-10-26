@@ -10,7 +10,7 @@ export publish_cmd="compile"
 
 sbt_cmd="sbt ++$TRAVIS_SCALA_VERSION"
 
-jvm="$sbt_cmd coverage validate coverageReport && codecov"
+jvm="$sbt_cmd coverage validate coverageReport coverageAggregate && codecov"
 
 run_cmd="$jvm && $sbt_cmd $publish_cmd"
 
