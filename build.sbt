@@ -301,5 +301,6 @@ lazy val examples = Project(
 // Commands
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-addCommandAlias("validate", ";clean;scalariformFormat;scalastyle;test")
+addCommandAlias("build", ";clean;scalariformFormat;scalastyle;test")
 
+addCommandAlias("validate", ";clean;scalastyle;test")
