@@ -1,3 +1,5 @@
+package examples
+
 import java.time.OffsetDateTime
 
 import akka.contrib.d3._

@@ -1,3 +1,5 @@
+package examples
+
 import akka.actor.ActorSystem
 import akka.contrib.d3._
 import com.typesafe.config.ConfigFactory
@@ -5,7 +7,7 @@ import com.typesafe.config.ConfigFactory
 import scala.concurrent.Future
 import scala.util.{Failure, Random, Success}
 
-object LocalTest extends App {
+object Local extends App {
 
   val config = ConfigFactory.parseString(
     s"""
