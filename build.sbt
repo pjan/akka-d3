@@ -158,7 +158,7 @@ lazy val promptSettings = Seq(
 lazy val scoverageSettings = Seq(
   coverageMinimum := 60,
   coverageFailOnMinimum := false,
-  coverageExcludedPackages := ".*generated.*;.*protobuf.*;.*examples.*",
+  coverageExcludedPackages := ".*generated.*;.*protobuf.*",
   // don't include scoverage as a dependency in the pom
   // see issue #980
   // this code was copied from https://github.com/mongodb/mongo-spark
@@ -253,10 +253,20 @@ lazy val D = new {
 // Projects
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-lazy val d3 = project.in(file("."))
+lazy val root = Project(
+    id = "akka-d3",
+    base = file(".")
+  )
   .settings(moduleName := "root")
   .settings(d3Settings)
   .settings(noPublishSettings)
+  .aggregate(d3)
+  .dependsOn(d3)
+
+lazy val d3 = project.in(file(".d3"))
+  .settings(moduleName := "akka-d3")
+  .settings(d3Settings)
+  .settings(commonJvmSettings)
   .aggregate(core, cluster)
   .dependsOn(core, cluster)
 
@@ -295,21 +305,6 @@ lazy val cluster = Project(
   .dependsOn(core)
   .settings(d3Settings)
   .settings(commonJvmSettings)
-
-lazy val examples = Project(
-    id = "examples",
-    base = file("examples")
-  )
-  .settings(moduleName := "examples")
-  .settings(libraryDependencies ++= Seq(
-      D.akkaPersistenceInMemory
-    )
-  )
-  .dependsOn(core, cluster)
-  .settings(d3Settings)
-  .settings(commonJvmSettings)
-  .settings(noPublishSettings)
-  .settings(noTests)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Commands
