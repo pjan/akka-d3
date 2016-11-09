@@ -16,7 +16,7 @@ private[d3] class ExpiringFuture[A] private (val future: Future[A]) extends AnyV
 
     val result = Future.firstCompletedOf(List(future, timeoutPromise.future))
 
-    result onSuccess { case _ ⇒ scheduledTimeout.cancel() }
+    result onComplete { case _ ⇒ scheduledTimeout.cancel() }
 
     result
   }

@@ -13,6 +13,11 @@ scala:
 jdk:
   - oraclejdk8
 
+matrix:
+  include:
+  - scala: 2.12.0
+    jdk: oraclejdk8
+
 script:
   - scripts/travis.sh
 
