@@ -24,8 +24,8 @@ lazy val tagName = Def.setting{
 
 lazy val buildSettings = Seq(
   organization := "io.pjan",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.11.8")
+  scalaVersion := "2.12.0",
+  crossScalaVersions := Seq("2.11.8", "2.12.0")
 )
 
 lazy val noPublishSettings = Seq(
@@ -98,8 +98,8 @@ lazy val commonSettings = Seq(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalacOptions ++= commonScalacOptions,
   libraryDependencies ++= Seq(
-    D.simulacrum,
-    D.machinist,
+//    D.simulacrum,
+//    D.machinist,
     compilerPlugin(D.macroParadise),
     compilerPlugin(D.kindProjector)
   ),
@@ -107,7 +107,7 @@ lazy val commonSettings = Seq(
   parallelExecution in Test := false,
   scalacOptions in (Compile, doc) := (scalacOptions in (Compile, doc)).value.filter(_ != "-Xfatal-warnings"),
   // workaround for https://github.com/scalastyle/scalastyle-sbt-plugin/issues/47
-  (scalastyleSources in Compile) <++= unmanagedSourceDirectories in Compile
+  scalastyleSources in Compile ++= (unmanagedSourceDirectories in Compile).value
 ) ++ warnUnusedImport
 
 lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(
@@ -131,7 +131,7 @@ lazy val commonScalacOptions = Seq(
   "-unchecked",
   "-Xfatal-warnings",
   "-Xlint",
-  "-Yinline-warnings",
+  //  "-Yinline-warnings",
   "-Yno-adapted-args",
   "-Ywarn-dead-code",
   "-Ywarn-numeric-widen",
@@ -140,7 +140,7 @@ lazy val commonScalacOptions = Seq(
   "-Xlog-reflective-calls",
   "-Ywarn-inaccessible",
   "-Ypatmat-exhaust-depth", "20",
-  "-Ybackend:GenBCode",
+  //  "-Ybackend:GenBCode",
   "-Ydelambdafy:method"
 )
 
@@ -186,7 +186,7 @@ lazy val warnUnusedImport = Seq(
     }
   },
   scalacOptions in (Compile, console) ~= {_.filterNot("-Ywarn-unused-import" == _)},
-  scalacOptions in (Test, console) <<= (scalacOptions in (Compile, console))
+  scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
 )
 
 lazy val revolverSettings =
@@ -205,19 +205,19 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.4.11"
-    val akkaPersistenceInMemory  = "1.3.10"
-    val machinist                = "0.5.0"
-    val simulacrum               = "0.9.0"
+    val akka                     = "2.4.12"
+    val akkaPersistenceInMemory  = "1.3.14"
+    val machinist                = "0.6.1"
+    val simulacrum               = "0.10.0"
     val typesafeConfig           = "1.2.1"
 
     // Test
     val scalaMock                = "3.2.2"
-    val scalaCheck               = "1.13.2"
+    val scalaCheck               = "1.13.4"
     val scalaTest                = "3.0.0"
 
     // Compiler
-    val kindProjector            = "0.9.0"
+    val kindProjector            = "0.9.3"
     val macroParadise            = "2.1.0"
   }
 
