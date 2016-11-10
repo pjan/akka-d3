@@ -10,12 +10,12 @@ Akka-d3 is a library which provides abstractions for doing Domain Driven Design 
 
 ### Getting Started
 
-Akka-d3 is currently available for 2.11.
+Akka-d3 is currently available for Scala 2.11 & 2.12.
 
 To get started with SBT, simply add the following to your `build.sbt` file:
 
 ```Scala
-libraryDependencies += "io.pjan" %% "akka-d3" % "0.1.0"
+libraryDependencies += "io.pjan" %% "akka-d3" % "0.1.1"
 ```
 
 This will pull in all of Akka-d3's modules. If you only require some functionality, you can pick-and-choose from amongst these modules (used in place of "akka-d3"):
