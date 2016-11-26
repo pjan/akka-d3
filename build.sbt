@@ -205,8 +205,8 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.4.12"
-    val akkaPersistenceInMemory  = "1.3.14"
+    val akka                     = "2.4.14"
+    val akkaPersistenceInMemory  = "1.3.15"
     val machinist                = "0.6.1"
     val simulacrum               = "0.10.0"
     val typesafeConfig           = "1.2.1"
@@ -214,7 +214,7 @@ lazy val D = new {
     // Test
     val scalaMock                = "3.2.2"
     val scalaCheck               = "1.13.4"
-    val scalaTest                = "3.0.0"
+    val scalaTest                = "3.0.1"
 
     // Compiler
     val kindProjector            = "0.9.3"
