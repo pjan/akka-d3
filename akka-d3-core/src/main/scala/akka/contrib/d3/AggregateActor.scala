@@ -1,8 +1,7 @@
 package akka.contrib.d3
 
 import akka.actor._
-import ExpiringFuture.syntax._
-import akka.pattern.pipe
+import akka.pattern._
 import akka.persistence._
 
 import scala.util.control.NonFatal
@@ -30,8 +29,8 @@ private[d3] class AggregateActor[A <: AggregateLike](
 
   type Aggregate = A
 
-  implicit val system = context.system
-  implicit val dispatcher = context.dispatcher
+  implicit private val system = context.system
+  implicit private val dispatcher = context.dispatcher
 
   // Actor State
   private sealed trait ActorState
@@ -85,7 +84,7 @@ private[d3] class AggregateActor[A <: AggregateLike](
     val availableReceive: Receive = {
       case cmd: Command ⇒
         log.debug("{} | received command: {}", identifier, cmd)
-        val result = behavior.onCommand(aggregateState, cmd).withTimeout(settings.commandHandlingTimeout)
+        val result = after(settings.commandHandlingTimeout, system.scheduler) { behavior.onCommand(aggregateState, cmd) }
         val requester = sender()
 
         result map {
@@ -103,7 +102,7 @@ private[d3] class AggregateActor[A <: AggregateLike](
 
   private def busy: Receive = {
     val busyReceive: Receive = {
-      case cmd: Command ⇒
+      case _: Command ⇒
         stash()
       case Succeeded(events, requester) ⇒
         onSucceeded(events, requester)

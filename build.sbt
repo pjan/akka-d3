@@ -24,8 +24,8 @@ lazy val tagName = Def.setting{
 
 lazy val buildSettings = Seq(
   organization := "io.pjan",
-  scalaVersion := "2.12.0",
-  crossScalaVersions := Seq("2.11.8", "2.12.0")
+  scalaVersion := "2.12.1",
+  crossScalaVersions := Seq("2.11.8", "2.12.1")
 )
 
 lazy val noPublishSettings = Seq(
@@ -206,7 +206,7 @@ lazy val D = new {
 
   val Versions = new {
     val akka                     = "2.4.14"
-    val akkaPersistenceInMemory  = "1.3.15"
+    val akkaPersistenceInMemory  = "1.3.17"
     val machinist                = "0.6.1"
     val simulacrum               = "0.10.0"
     val typesafeConfig           = "1.2.1"
