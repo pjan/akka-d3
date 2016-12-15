@@ -228,6 +228,7 @@ lazy val D = new {
   val akkaHttpCore             = "com.typesafe.akka"              %%  "akka-http-core-experimental"          % Versions.akka
   val akkaHttpXml              = "com.typesafe.akka"              %%  "akka-http-xml-experimental"           % Versions.akka
   val akkaPersistence          = "com.typesafe.akka"              %%  "akka-persistence"                     % Versions.akka
+  val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query-experimental"  % Versions.akka
   val akkaSlf4j                = "com.typesafe.akka"              %%  "akka-slf4j"                           % Versions.akka
   val akkaStream               = "com.typesafe.akka"              %%  "akka-stream"                          % Versions.akka
   val machinist                = "org.typelevel"                  %%  "machinist"                            % Versions.machinist
@@ -267,8 +268,8 @@ lazy val d3 = project.in(file(".d3"))
   .settings(moduleName := "akka-d3")
   .settings(d3Settings)
   .settings(commonJvmSettings)
-  .aggregate(core, cluster)
-  .dependsOn(core, cluster)
+  .aggregate(core, cluster, utils)
+  .dependsOn(core, cluster, utils)
 
 lazy val core = Project(
     id = "core",
@@ -279,12 +280,28 @@ lazy val core = Project(
   	libraryDependencies ++= Seq(
   	  D.akkaActor,
   	  D.akkaPersistence,
+      D.akkaPersistenceQuery,
   	  D.akkaTest % "test",
   	  D.scalaTest % "test",
       D.akkaPersistenceInMemory % "test",
       compilerPlugin(D.kindProjector)
   	)
   )
+  .settings(d3Settings)
+  .settings(commonJvmSettings)
+
+lazy val utils = Project(
+    id = "utils",
+    base = file("akka-d3-utils")
+  )
+  .settings(moduleName := "akka-d3-utils")
+  .settings(
+    libraryDependencies ++= Seq(
+      D.scalaTest % "test",
+      compilerPlugin(D.kindProjector)
+    )
+  )
+  .dependsOn(core)
   .settings(d3Settings)
   .settings(commonJvmSettings)
 

@@ -8,33 +8,39 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 
 object AggregateRef {
-  def apply[A <: AggregateLike](
-    identifier:       A#Id,
+  def apply[E <: AggregateEntity](
+    identifier:       E#Id,
     aggregateManager: ActorRef,
     timeoutDuration:  FiniteDuration
   )(
     implicit
     ec: ExecutionContext
-  ): AggregateRef[A] =
-    new AggregateRef[A](identifier, aggregateManager, timeoutDuration)
+  ): AggregateRef[E] =
+    new AggregateRef[E](identifier, aggregateManager, timeoutDuration)
 }
 
-protected[d3] class AggregateRef[A <: AggregateLike](
-    identifier:       A#Id,
+protected[d3] class AggregateRef[E <: AggregateEntity](
+    identifier:       E#Id,
     aggregateManager: ActorRef,
     timeoutDuration:  FiniteDuration
 )(
     implicit
     ec: ExecutionContext
-) extends AggregateAliases {
+) {
 
-  type Aggregate = A
+  type Aggregate = E#Aggregate
+  type Command = E#Command
+  type Event = E#Event
+  type Events = collection.immutable.Seq[Event]
 
   private val askTimeout: Timeout =
     Timeout(timeoutDuration)
 
   private val askableAggregateManager =
     new AskableActorRef(aggregateManager)
+
+  def withAskTimeout(timeout: FiniteDuration): AggregateRef[E] =
+    new AggregateRef[E](identifier, aggregateManager, timeout)
 
   def tell(cmd: Command): Unit =
     aggregateManager ! AggregateManager.CommandMessage(identifier, cmd)
