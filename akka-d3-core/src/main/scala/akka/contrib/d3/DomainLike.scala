@@ -4,9 +4,9 @@ import akka.actor._
 import akka.util.Reflect
 import com.typesafe.config.{Config, ConfigFactory}
 
-import scala.util.control.NonFatal
-
+import scala.util.control.{NoStackTrace, NonFatal}
 import scala.concurrent.ExecutionContext
+import scala.collection.concurrent.{Map ⇒ ConcurrentMap}
 import scala.reflect.ClassTag
 
 object Domain extends ExtensionId[DomainImpl]
@@ -42,22 +42,23 @@ object Domain extends ExtensionId[DomainImpl]
 }
 
 abstract class Domain {
-  def register[A <: AggregateLike](
-    behavior: Behavior[A],
-    name:     Option[String]            = None,
-    settings: Option[AggregateSettings] = None
+  def register[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E,
+    name:          Option[String]            = None,
+    settings:      Option[AggregateSettings] = None
   )(
     implicit
-    act:  ClassTag[A],
-    idct: ClassTag[A#Id]
+    ect: ClassTag[E]
   ): Domain
-  def aggregateRef[A <: AggregateLike](
-    id: A#Id
+
+  def aggregateRef[E <: AggregateEntity](
+    id: E#Id
   )(
     implicit
     ec:  ExecutionContext,
-    act: ClassTag[A]
-  ): AggregateRef[A]
+    ect: ClassTag[E]
+  ): AggregateRef[E]
+
 }
 
 class DomainImpl(
@@ -72,43 +73,52 @@ class DomainImpl(
 
   protected val dynamicAccess: DynamicAccess = system.dynamicAccess
 
-  private val aggregateManagers: collection.concurrent.Map[ClassTag[_], ActorRef] = collection.concurrent.TrieMap()
-  private val aggregateSettings: collection.concurrent.Map[ClassTag[_], AggregateSettings] = collection.concurrent.TrieMap()
+  private val registeredTypeNames: ConcurrentMap[String, ClassTag[_]] = collection.concurrent.TrieMap()
+  private val aggregateManagers: ConcurrentMap[ClassTag[_], ActorRef] = collection.concurrent.TrieMap()
+  private val aggregateSettings: ConcurrentMap[ClassTag[_], AggregateSettings] = collection.concurrent.TrieMap()
 
-  override def register[A <: AggregateLike](
-    behavior: Behavior[A],
-    name:     Option[String],
-    settings: Option[AggregateSettings]
+  override def register[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E,
+    name:          Option[String],
+    settings:      Option[AggregateSettings]
   )(
     implicit
-    act:  ClassTag[A],
-    idct: ClassTag[A#Id]
+    ect: ClassTag[E]
   ): Domain = {
-    val aggregateName = name.getOrElse(act.runtimeClass.getName.toLowerCase)
+    val aggregateName = name.getOrElse(ect.runtimeClass.getName.toLowerCase)
     val aggregateSetting = settings.getOrElse(AggregateSettings(aggregateName, system.settings.config))
 
-    aggregateManagers.putIfAbsent(act, provider.getAggregateManagerRef[A](behavior, name, aggregateSetting))
-    aggregateSettings.putIfAbsent(act, aggregateSetting)
+    val alreadyRegistered = registeredTypeNames.putIfAbsent(aggregateName, ect)
+    alreadyRegistered match {
+      case Some(rct) if !rct.equals(ect) ⇒
+        throw new IllegalArgumentException(
+          s"The AggregateName [$aggregateName] for aggregate ${ect.runtimeClass.getSimpleName} is not unique. " +
+            s"It is already for ${rct.runtimeClass.getSimpleName}. Use the name argument to define a unique name."
+        ) with NoStackTrace
+      case _ ⇒
+        aggregateManagers.putIfAbsent(ect, aggregateManagerProvider.getAggregateManagerRef[E](entityFactory, name, aggregateSetting))
+        aggregateSettings.putIfAbsent(ect, aggregateSetting)
+    }
 
     this
   }
 
-  override def aggregateRef[A <: AggregateLike](
-    id: A#Id
+  override def aggregateRef[E <: AggregateEntity](
+    id: E#Id
   )(
     implicit
     ec:  ExecutionContext,
-    act: ClassTag[A]
-  ): AggregateRef[A] = {
-    val aggregateManager = aggregateManagers(act)
-    val settings = aggregateSettings(act)
+    ect: ClassTag[E]
+  ): AggregateRef[E] = {
+    val aggregateManager = aggregateManagers(ect)
+    val settings = aggregateSettings(ect)
 
-    AggregateRef[A](id, aggregateManager, settings.askTimeout)
+    AggregateRef[E](id, aggregateManager, settings.askTimeout)
   }
 
   import settings._
 
-  val provider: AggregateManagerProvider = try {
+  private val aggregateManagerProvider: AggregateManagerProvider = try {
     val arguments = Vector(
       classOf[ExtendedActorSystem] → system
     )

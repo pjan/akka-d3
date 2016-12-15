@@ -5,13 +5,12 @@ import akka.actor.ActorRef
 import scala.reflect.ClassTag
 
 private[d3] trait AggregateManagerProvider {
-  def getAggregateManagerRef[A <: AggregateLike](
-    behavior: Behavior[A],
-    name:     Option[String],
-    settings: AggregateSettings
+  def getAggregateManagerRef[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E,
+    name:          Option[String],
+    settings:      AggregateSettings
   )(
     implicit
-    act:  ClassTag[A],
-    idct: ClassTag[A#Id]
+    ect: ClassTag[E]
   ): ActorRef
 }

@@ -4,6 +4,7 @@ import akka.actor._
 import akka.pattern._
 import akka.persistence._
 
+import scala.concurrent.{Future, TimeoutException}
 import scala.util.control.NonFatal
 
 private[d3] object AggregateActor {
@@ -11,23 +12,26 @@ private[d3] object AggregateActor {
   @SerialVersionUID(1L) final case class GetState(requester: ActorRef)
   @SerialVersionUID(1L) final case class Exists[A <: AggregateLike](requester: ActorRef, pred: A ⇒ Boolean)
 
-  def props[A <: AggregateLike](
-    identifier: A#Id,
-    behavior:   Behavior[A],
-    settings:   AggregateSettings
+  def props[E <: AggregateEntity](
+    identifier:    E#Id,
+    entityFactory: E#Id ⇒ E,
+    settings:      AggregateSettings
   ): Props =
-    Props(new AggregateActor(identifier, behavior, settings))
+    Props(new AggregateActor(identifier, entityFactory(identifier), settings))
 }
 
-private[d3] class AggregateActor[A <: AggregateLike](
-    identifier: A#Id,
-    behavior:   Behavior[A],
+private[d3] class AggregateActor[E <: AggregateEntity](
+    identifier: E#Id,
+    val entity: AggregateEntity,
     settings:   AggregateSettings
-) extends PersistentActor with ActorLogging with AggregateAliases {
+) extends PersistentActor with ActorLogging {
   import AggregateActor._
   import AggregateState._
 
-  type Aggregate = A
+  type Aggregate = entity.Aggregate
+  type Command = entity.Command
+  type Event = entity.Event
+  type State = entity.State
 
   implicit private val system = context.system
   implicit private val dispatcher = context.dispatcher
@@ -38,14 +42,14 @@ private[d3] class AggregateActor[A <: AggregateLike](
   private case object Busy extends ActorState
 
   // Internal messaging
-  private case class Succeeded(events: Events, requester: ActorRef)
+  private case class Succeeded(events: collection.immutable.Seq[Event], requester: ActorRef)
   private case class Failed(command: Command, error: Throwable, requester: ActorRef)
 
   // Configuration
-  val persistenceId: String = identifier.value
+  val persistenceId: String = entity.identifier.value
 
   // State
-  private var aggregateState: AggregateState[Aggregate] = Uninitialized(identifier)
+  private var aggregateState = entity.initialState
   private var eventsSinceLastSnapshot: Int = 0
   private var lastSnapshotSequenceNr: Option[Long] = None
 
@@ -60,19 +64,20 @@ private[d3] class AggregateActor[A <: AggregateLike](
       eventsSinceLastSnapshot = 0
       log.debug("{} | recovering snapshot: {}", identifier, aggregate)
       restoreState(snapshotMetadata, aggregate)
-    case event: Event ⇒
+    case RecoveryCompleted ⇒
+      log.debug("{} | recovery completed", identifier)
+      changeState(Available)
+    case e: AggregateEvent ⇒
+      val event = e.asInstanceOf[Event]
       log.debug("{} | replaying event: {}", identifier, event)
       eventsSinceLastSnapshot += 1
-      behavior.onEvent(aggregateState, event) match {
+      entity.onEvent(aggregateState, event) match {
         case Right(newAggregateState) ⇒
           aggregateState = newAggregateState
           log.debug("{} | state after event: {}", identifier, aggregateState)
         case Left(e) ⇒
           log.error("{} | application of event during recovery failed: {}", identifier, event)
       }
-    case RecoveryCompleted ⇒
-      log.debug("{} | recovery completed", identifier)
-      changeState(Available)
     case other ⇒
       log.error("{} | unknown message during recovery: {}", identifier, other)
   }
@@ -82,9 +87,11 @@ private[d3] class AggregateActor[A <: AggregateLike](
 
   private def available: Receive = {
     val availableReceive: Receive = {
-      case cmd: Command ⇒
+      case c: AggregateCommand ⇒
+        val cmd = c.asInstanceOf[Command]
         log.debug("{} | received command: {}", identifier, cmd)
-        val result = after(settings.commandHandlingTimeout, system.scheduler) { behavior.onCommand(aggregateState, cmd) }
+        val timeout = after(duration = settings.commandHandlingTimeout, using = context.system.scheduler) { Future.failed(new TimeoutException(s"Timed out for command: $cmd")) }
+        val result = Future.firstCompletedOf(Seq(entity.onCommand(aggregateState, cmd), timeout))
         val requester = sender()
 
         result map {
@@ -102,12 +109,12 @@ private[d3] class AggregateActor[A <: AggregateLike](
 
   private def busy: Receive = {
     val busyReceive: Receive = {
-      case _: Command ⇒
-        stash()
       case Succeeded(events, requester) ⇒
         onSucceeded(events, requester)
       case Failed(command, error, requester) ⇒
         onFailed(command, error, requester)
+      case _ ⇒
+        stash()
     }
 
     busyReceive orElse defaultReceive
@@ -150,7 +157,7 @@ private[d3] class AggregateActor[A <: AggregateLike](
     changeState(Available)
   }
 
-  private def onSucceeded(events: Events, requester: ActorRef): Unit = {
+  private def onSucceeded(events: collection.immutable.Seq[Event], requester: ActorRef): Unit = {
     if (events.nonEmpty) {
       persistAll(events) { evt ⇒
         onEventPersisted(evt)
@@ -161,7 +168,7 @@ private[d3] class AggregateActor[A <: AggregateLike](
   }
 
   private def onEventPersisted(event: Event): Unit = {
-    behavior.onEvent(aggregateState, event) match {
+    entity.onEvent(aggregateState, event) match {
       case Right(newAggregateState) ⇒
         aggregateState = newAggregateState
         eventsSinceLastSnapshot += 1
