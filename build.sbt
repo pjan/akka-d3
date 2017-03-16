@@ -209,10 +209,8 @@ lazy val D = new {
     val akkaPersistenceInMemory  = "2.4.17.3"
     val machinist                = "0.6.1"
     val simulacrum               = "0.10.0"
-    val typesafeConfig           = "1.2.1"
 
     // Test
-    val scalaMock                = "3.2.2"
     val scalaCheck               = "1.13.4"
     val scalaTest                = "3.0.1"
 
@@ -224,24 +222,17 @@ lazy val D = new {
   val akkaActor                = "com.typesafe.akka"              %%  "akka-actor"                           % Versions.akka
   val akkaCluster              = "com.typesafe.akka"              %%  "akka-cluster"                         % Versions.akka
   val akkaClusterSharding      = "com.typesafe.akka"              %%  "akka-cluster-sharding"                % Versions.akka
-  val akkaHttp                 = "com.typesafe.akka"              %%  "akka-http-experimental"               % Versions.akka
-  val akkaHttpCore             = "com.typesafe.akka"              %%  "akka-http-core-experimental"          % Versions.akka
-  val akkaHttpXml              = "com.typesafe.akka"              %%  "akka-http-xml-experimental"           % Versions.akka
   val akkaPersistence          = "com.typesafe.akka"              %%  "akka-persistence"                     % Versions.akka
+  val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
   val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query-experimental"  % Versions.akka
-  val akkaSlf4j                = "com.typesafe.akka"              %%  "akka-slf4j"                           % Versions.akka
   val akkaStream               = "com.typesafe.akka"              %%  "akka-stream"                          % Versions.akka
   val machinist                = "org.typelevel"                  %%  "machinist"                            % Versions.machinist
   val simulacrum               = "com.github.mpilquist"           %%  "simulacrum"                           % Versions.simulacrum
-  val typesafeConfig           = "com.typesafe"                   %   "config"                               % Versions.typesafeConfig
 
   // Test
-  val akkaHttpTest             = "com.typesafe.akka"              %%  "akka-http-testkit"                    % Versions.akka
   val akkaTest                 = "com.typesafe.akka"              %%  "akka-testkit"                         % Versions.akka
-  val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
   val akkaStreamTest           = "com.typesafe.akka"              %%  "akka-stream-testkit"                  % Versions.akka
   val scalaCheck               = "org.scalacheck"                 %%  "scalacheck"                           % Versions.scalaCheck
-  val scalaMock                = "org.scalamock"                  %%  "scalamock-scalatest-support"          % Versions.scalaMock
   val scalaTest                = "org.scalatest"                  %%  "scalatest"                            % Versions.scalaTest
 
   // Compiler
