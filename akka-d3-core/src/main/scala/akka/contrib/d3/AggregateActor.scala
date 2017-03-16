@@ -46,7 +46,9 @@ private[d3] class AggregateActor[E <: AggregateEntity](
   private case class Failed(command: Command, error: Throwable, requester: ActorRef)
 
   // Configuration
-  val persistenceId: String = entity.identifier.value
+  override val persistenceId: String = entity.identifier.value
+  override val journalPluginId: String = settings.journalPluginId
+  override val snapshotPluginId: String = settings.snapshotPluginId
 
   // State
   private var aggregateState = entity.initialState

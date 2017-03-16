@@ -23,7 +23,9 @@ object AggregateSettings {
       dispatcher = aggregateConfig.getString("dispatcher") match {
         case "" ⇒ Dispatchers.DefaultDispatcherId
         case id ⇒ id
-      }
+      },
+      journalPluginId = aggregateConfig.getString("journal.plugin"),
+      snapshotPluginId = aggregateConfig.getString("snapshot-store.plugin")
     )
   }
 
@@ -36,5 +38,7 @@ final class AggregateSettings(
   val askTimeout:             FiniteDuration,
   val eventsPerSnapshot:      Int,
   val bufferSize:             Int,
-  val dispatcher:             String
+  val dispatcher:             String,
+  val journalPluginId:        String,
+  val snapshotPluginId:       String
 )
