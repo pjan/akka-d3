@@ -53,6 +53,7 @@ object Domain extends ExtensionId[DomainImpl]
       getString("akka.contrib.d3.query.provider") match {
         case "empty"     ⇒ classOf[query.EmptyReadJournalProvider].getName
         case "in-memory" ⇒ "akka.contrib.d3.query.InMemoryReadJournalProvider"
+        case "cassandra" ⇒ "akka.contrib.d3.query.CassandraReadJournalProvider"
         case fqcn        ⇒ fqcn
       }
   }
