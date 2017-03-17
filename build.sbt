@@ -252,8 +252,8 @@ lazy val root = Project(
   .settings(moduleName := "root")
   .settings(d3Settings)
   .settings(noPublishSettings)
-  .aggregate(d3)
-  .dependsOn(d3)
+  .aggregate(d3, queryInmemory)
+  .dependsOn(d3, queryInmemory)
 
 lazy val d3 = project.in(file(".d3"))
   .settings(moduleName := "akka-d3")
@@ -307,6 +307,21 @@ lazy val cluster = Project(
       D.akkaTest % "test",
       D.scalaTest % "test",
       D.akkaPersistenceInMemory % "test",
+      compilerPlugin(D.kindProjector)
+    )
+  )
+  .dependsOn(core)
+  .settings(d3Settings)
+  .settings(commonJvmSettings)
+
+lazy val queryInmemory = Project(
+  id = "query-inmemory",
+  base = file("akka-d3-query-inmemory")
+)
+  .settings(moduleName := "akka-d3-query-inmemory")
+  .settings(
+    libraryDependencies ++= Seq(
+      D.akkaPersistenceInMemory,
       compilerPlugin(D.kindProjector)
     )
   )
