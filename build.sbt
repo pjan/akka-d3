@@ -206,6 +206,7 @@ lazy val D = new {
 
   val Versions = new {
     val akka                     = "2.4.17"
+    val akkaPersistenceCassandra = "0.23"
     val akkaPersistenceInMemory  = "2.4.17.3"
     val machinist                = "0.6.1"
     val simulacrum               = "0.10.0"
@@ -223,6 +224,7 @@ lazy val D = new {
   val akkaCluster              = "com.typesafe.akka"              %%  "akka-cluster"                         % Versions.akka
   val akkaClusterSharding      = "com.typesafe.akka"              %%  "akka-cluster-sharding"                % Versions.akka
   val akkaPersistence          = "com.typesafe.akka"              %%  "akka-persistence"                     % Versions.akka
+  val akkaPersistenceCassandra = "com.typesafe.akka"              %%  "akka-persistence-cassandra"           % Versions.akkaPersistenceCassandra
   val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
   val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query-experimental"  % Versions.akka
   val akkaStream               = "com.typesafe.akka"              %%  "akka-stream"                          % Versions.akka
@@ -252,8 +254,8 @@ lazy val root = Project(
   .settings(moduleName := "root")
   .settings(d3Settings)
   .settings(noPublishSettings)
-  .aggregate(d3, queryInmemory)
-  .dependsOn(d3, queryInmemory)
+  .aggregate(d3, queryCassandra, queryInmemory)
+  .dependsOn(d3, queryCassandra, queryInmemory)
 
 lazy val d3 = project.in(file(".d3"))
   .settings(moduleName := "akka-d3")
@@ -315,13 +317,28 @@ lazy val cluster = Project(
   .settings(commonJvmSettings)
 
 lazy val queryInmemory = Project(
-  id = "query-inmemory",
-  base = file("akka-d3-query-inmemory")
-)
+    id = "query-inmemory",
+    base = file("akka-d3-query-inmemory")
+  )
   .settings(moduleName := "akka-d3-query-inmemory")
   .settings(
     libraryDependencies ++= Seq(
       D.akkaPersistenceInMemory,
+      compilerPlugin(D.kindProjector)
+    )
+  )
+  .dependsOn(core)
+  .settings(d3Settings)
+  .settings(commonJvmSettings)
+
+lazy val queryCassandra = Project(
+    id = "query-cassandra",
+    base = file("akka-d3-query-cassandra")
+  )
+  .settings(moduleName := "akka-d3-query-cassandra")
+  .settings(
+    libraryDependencies ++= Seq(
+      D.akkaPersistenceCassandra,
       compilerPlugin(D.kindProjector)
     )
   )
