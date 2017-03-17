@@ -261,8 +261,8 @@ lazy val d3 = project.in(file(".d3"))
   .settings(moduleName := "akka-d3")
   .settings(d3Settings)
   .settings(commonJvmSettings)
-  .aggregate(core, cluster)
-  .dependsOn(core, cluster)
+  .aggregate(core, cluster, utils)
+  .dependsOn(core, cluster, utils)
 
 lazy val core = Project(
     id = "core",
@@ -280,6 +280,7 @@ lazy val core = Project(
       compilerPlugin(D.kindProjector)
   	)
   )
+  .dependsOn(utils)
   .settings(d3Settings)
   .settings(commonJvmSettings)
 
@@ -330,6 +331,23 @@ lazy val queryCassandra = Project(
   .dependsOn(core)
   .settings(d3Settings)
   .settings(commonJvmSettings)
+
+lazy val utils = Project(
+    id = "utils",
+    base = file("akka-d3-utils")
+  )
+  .settings(moduleName := "akka-d3-utils")
+  .settings(
+    libraryDependencies ++= Seq(
+      D.akkaActor,
+      D.akkaTest % "test",
+      D.scalaTest % "test",
+      compilerPlugin(D.kindProjector)
+    )
+  )
+  .settings(d3Settings)
+  .settings(commonJvmSettings)
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Commands
