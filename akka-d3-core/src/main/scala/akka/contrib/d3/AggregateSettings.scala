@@ -25,7 +25,8 @@ object AggregateSettings {
         case id ⇒ id
       },
       journalPluginId = aggregateConfig.getString("journal.plugin"),
-      snapshotPluginId = aggregateConfig.getString("snapshot-store.plugin")
+      snapshotPluginId = aggregateConfig.getString("snapshot-store.plugin"),
+      readJournalPluginId = aggregateConfig.getString("read-journal.plugin")
     )
   }
 
@@ -40,5 +41,6 @@ final class AggregateSettings(
   val bufferSize:             Int,
   val dispatcher:             String,
   val journalPluginId:        String,
-  val snapshotPluginId:       String
+  val snapshotPluginId:       String,
+  val readJournalPluginId:    String
 )

@@ -7,7 +7,7 @@ import scala.reflect.ClassTag
 class LocalAggregateManagerProvider(
     system: ExtendedActorSystem
 ) extends AggregateManagerProvider {
-  override def getAggregateManagerRef[E <: AggregateEntity](
+  override def aggregateManagerRef[E <: AggregateEntity](
     entityFactory: E#Id ⇒ E,
     name:          Option[String],
     settings:      AggregateSettings
