@@ -10,9 +10,9 @@ import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 import scala.util.control.NonFatal
 
-object StartupTasks extends ExtensionId[StartupTasksImpl]
+object StartupTasks extends ExtensionId[StartupTasks]
     with ExtensionIdProvider {
-  override def get(system: ActorSystem): StartupTasksImpl = super.get(system)
+  override def get(system: ActorSystem): StartupTasks = super.get(system)
 
   override def lookup(): ExtensionId[_ <: Extension] = StartupTasks
 
@@ -25,7 +25,7 @@ object StartupTasks extends ExtensionId[StartupTasksImpl]
   class Settings(classLoader: ClassLoader, cfg: Config) {
     final val config: Config = {
       val config = cfg.withFallback(ConfigFactory.defaultReference(classLoader))
-      config.checkValid(ConfigFactory.defaultReference(classLoader), "akka.contrib.d3")
+      config.checkValid(ConfigFactory.defaultReference(classLoader), "akka.contrib.d3.utils.startup-tasks")
       config
     }
 
@@ -49,7 +49,8 @@ object StartupTasks extends ExtensionId[StartupTasksImpl]
   private[d3] def findClassLoader(): ClassLoader = Reflect.findClassLoader()
 }
 
-abstract class StartupTasks {
+abstract class StartupTasks
+    extends Extension {
   def create(
     name:                String,
     task:                () ⇒ Future[Done],
@@ -61,11 +62,10 @@ abstract class StartupTasks {
 }
 
 class StartupTasksImpl(
-  val system:        ExtendedActorSystem,
-  applicationConfig: Config,
-  classLoader:       ClassLoader
-) extends StartupTasks
-    with Extension {
+    val system:        ExtendedActorSystem,
+    applicationConfig: Config,
+    classLoader:       ClassLoader
+) extends StartupTasks {
   import StartupTasks._
 
   final val settings: Settings = new Settings(classLoader, applicationConfig)

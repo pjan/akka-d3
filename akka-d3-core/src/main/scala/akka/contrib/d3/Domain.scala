@@ -14,13 +14,13 @@ import scala.collection.concurrent.{Map ⇒ ConcurrentMap}
 import scala.reflect.ClassTag
 import scala.util.Try
 
-object Domain extends ExtensionId[DomainImpl]
+object Domain extends ExtensionId[Domain]
     with ExtensionIdProvider {
-  override def get(system: ActorSystem): DomainImpl = super.get(system)
+  override def get(system: ActorSystem): Domain = super.get(system)
 
   override def lookup(): ExtensionId[_ <: Extension] = Domain
 
-  override def createExtension(system: ExtendedActorSystem): DomainImpl = {
+  override def createExtension(system: ExtendedActorSystem): Domain = {
     val cl = findClassLoader()
     val appConfig = system.settings.config
     new DomainImpl(system, appConfig, cl)
@@ -61,7 +61,8 @@ object Domain extends ExtensionId[DomainImpl]
   private[d3] def findClassLoader(): ClassLoader = Reflect.findClassLoader()
 }
 
-abstract class Domain {
+abstract class Domain
+    extends Extension {
   def register[E <: AggregateEntity](
     entityFactory: E#Id ⇒ E,
     name:          Option[String]            = None,
@@ -94,11 +95,10 @@ abstract class Domain {
 }
 
 class DomainImpl(
-  val system:        ExtendedActorSystem,
-  applicationConfig: Config,
-  classLoader:       ClassLoader
-) extends Domain
-    with Extension {
+    val system:        ExtendedActorSystem,
+    applicationConfig: Config,
+    classLoader:       ClassLoader
+) extends Domain {
   import Domain._
 
   final val settings: Settings = new Settings(classLoader, applicationConfig)
