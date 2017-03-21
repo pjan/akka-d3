@@ -26,7 +26,9 @@ class LocalStartupTaskProvider(
       startupTaskProps, name, minBackoff, maxBackoff, randomBackoffFactor, SupervisorStrategy.stoppingStrategy
     )
 
-    val singleton = SystemSingletonManager(system).actorOf(backoffProps, s"$name-singleton")
+    val singletonProps = LocalSingletonManager.props(backoffProps, LocalSingletonManagerSettings("singleton"))
+
+    val singleton = system.actorOf(singletonProps, s"$name-singleton")
 
     new StartupTask(singleton)
   }
