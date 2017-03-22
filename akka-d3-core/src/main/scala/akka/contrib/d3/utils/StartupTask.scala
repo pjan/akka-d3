@@ -9,17 +9,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Failure
 
-private[d3] trait StartupTaskProvider {
-  def startupTask(
-    name:                String,
-    task:                () ⇒ Future[Done],
-    timeout:             FiniteDuration,
-    minBackoff:          FiniteDuration,
-    maxBackoff:          FiniteDuration,
-    randomBackoffFactor: Double
-  ): StartupTask
-}
-
 class StartupTask(actorRef: ActorRef) {
 
   import StartupTaskActor._

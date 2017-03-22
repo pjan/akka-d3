@@ -5,7 +5,7 @@ import akka.contrib.d3._
 
 import scala.reflect.ClassTag
 
-class LocalAggregateManagerProvider(
+private[d3] class LocalAggregateManagerProvider(
     system: ExtendedActorSystem
 ) extends AggregateManagerProvider {
   override def aggregateManagerRef[E <: AggregateEntity](
