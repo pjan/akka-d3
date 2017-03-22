@@ -3,6 +3,7 @@ package akka.contrib.d3
 import akka.NotUsed
 import akka.actor._
 import akka.contrib.d3.query.ReadJournalProvider
+import akka.contrib.d3.writeside.{AggregateManagerProvider, LocalAggregateManagerProvider}
 import akka.persistence.query.Offset
 import akka.stream.scaladsl.Source
 import akka.util.Reflect
@@ -45,7 +46,7 @@ object Domain extends ExtensionId[Domain]
     final val amProviderClass =
       Try(getString("akka.contrib.d3.provider")).toOption.getOrElse(topology) match {
         case "local"   ⇒ classOf[LocalAggregateManagerProvider].getName
-        case "cluster" ⇒ "akka.contrib.d3.cluster.ClusterAggregateManagerProvider"
+        case "cluster" ⇒ "akka.contrib.d3.writeside.ClusterAggregateManagerProvider"
         case fqcn      ⇒ fqcn
       }
 

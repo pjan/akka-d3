@@ -1,4 +1,4 @@
-package akka.contrib.d3.cluster
+package akka.contrib.d3.writeside
 
 import akka.actor._
 import akka.cluster.Cluster
@@ -7,7 +7,7 @@ import akka.contrib.d3._
 
 import scala.reflect.ClassTag
 
-object ClusterAggregateManagerProvider {
+private[d3] object ClusterAggregateManagerProvider {
 
   private[ClusterAggregateManagerProvider] case class MessageExtractor(maxNumberOfShards: Int) extends ShardRegion.MessageExtractor {
     override def entityMessage(message: Any): Any = message
@@ -24,7 +24,7 @@ object ClusterAggregateManagerProvider {
 
 }
 
-class ClusterAggregateManagerProvider(
+private[d3] final class ClusterAggregateManagerProvider(
     system: ExtendedActorSystem
 ) extends AggregateManagerProvider {
   override def aggregateManagerRef[E <: AggregateEntity](

@@ -41,7 +41,7 @@ object StartupTasks extends ExtensionId[StartupTasks]
     final val startupTaskProviderClass =
       Try(getString("akka.contrib.d3.utils.startup-tasks.provider")).toOption.getOrElse(topology) match {
         case "local"   ⇒ classOf[LocalStartupTaskProvider].getName
-        case "cluster" ⇒ "akka.contrib.d3.cluster.utils.ClusterStartupTaskProvider"
+        case "cluster" ⇒ "akka.contrib.d3.utils.ClusterStartupTaskProvider"
         case fqcn      ⇒ fqcn
       }
   }

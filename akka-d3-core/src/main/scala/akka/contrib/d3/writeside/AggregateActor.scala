@@ -1,6 +1,7 @@
-package akka.contrib.d3
+package akka.contrib.d3.writeside
 
 import akka.actor._
+import akka.contrib.d3._
 import akka.pattern._
 import akka.persistence._
 

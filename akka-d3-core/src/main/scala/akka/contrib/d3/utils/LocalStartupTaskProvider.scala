@@ -4,12 +4,15 @@ import akka.Done
 import akka.actor._
 import akka.pattern.BackoffSupervisor
 
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-class LocalStartupTaskProvider(
+private[d3] final class LocalStartupTaskProvider(
     system: ExtendedActorSystem
 ) extends StartupTaskProvider {
+
+  private val singletons = TrieMap.empty[String, ActorRef]
 
   def startupTask(
     name:                String,
@@ -26,10 +29,12 @@ class LocalStartupTaskProvider(
       startupTaskProps, name, minBackoff, maxBackoff, randomBackoffFactor, SupervisorStrategy.stoppingStrategy
     )
 
-    val singletonProps = LocalSingletonManager.props(backoffProps, LocalSingletonManagerSettings("singleton"))
-
-    val singleton = system.actorOf(singletonProps, s"$name-singleton")
+    val singleton = getSingleton(backoffProps, s"$name-singleton")
 
     new StartupTask(singleton)
   }
+
+  private def getSingleton(props: Props, name: String): ActorRef =
+    singletons.getOrElseUpdate(name, system.actorOf(props, name))
+
 }

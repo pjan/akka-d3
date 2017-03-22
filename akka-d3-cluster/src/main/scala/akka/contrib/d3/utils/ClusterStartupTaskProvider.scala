@@ -1,15 +1,14 @@
-package akka.contrib.d3.cluster.utils
+package akka.contrib.d3.utils
 
 import akka.Done
 import akka.actor._
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
-import akka.contrib.d3.utils._
 import akka.pattern.BackoffSupervisor
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-class ClusterStartupTaskProvider(
+private[d3] final class ClusterStartupTaskProvider(
     system: ExtendedActorSystem
 ) extends StartupTaskProvider {
 

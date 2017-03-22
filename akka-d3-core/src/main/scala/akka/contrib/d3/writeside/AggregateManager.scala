@@ -1,6 +1,7 @@
-package akka.contrib.d3
+package akka.contrib.d3.writeside
 
 import akka.actor._
+import akka.contrib.d3._
 
 private[d3] object AggregateManager {
   sealed trait AggregateQuery

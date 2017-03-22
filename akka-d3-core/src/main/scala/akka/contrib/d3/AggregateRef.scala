@@ -1,6 +1,7 @@
 package akka.contrib.d3
 
 import akka.actor._
+import akka.contrib.d3.writeside.AggregateManager
 import akka.pattern.AskableActorRef
 import akka.util.Timeout
 
