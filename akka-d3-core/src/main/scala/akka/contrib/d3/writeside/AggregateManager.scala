@@ -17,7 +17,7 @@ private[d3] object AggregateManager {
     Props(new AggregateManager[E](entityFactory, settings))
 }
 
-private[d3] class AggregateManager[E <: AggregateEntity](
+private[d3] final class AggregateManager[E <: AggregateEntity](
     entityFactory: E#Id ⇒ E,
     settings:      AggregateSettings
 ) extends Actor with ActorLogging {

@@ -1,6 +1,6 @@
 package akka.contrib.d3
 
-sealed trait AggregateState[+A <: AggregateLike] {
+sealed abstract class AggregateState[+A <: AggregateLike] {
   def aggregateId: A#Id
   def isInitialized: Boolean
 }

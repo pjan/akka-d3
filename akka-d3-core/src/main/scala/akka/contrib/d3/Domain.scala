@@ -82,15 +82,10 @@ abstract class Domain
   ): AggregateRef[E]
 
   def eventStream[E <: AggregateEvent](
-    settings: AggregateSettings
-  )(
     tag:        Tag,
-    fromOffset: Offset
-  ): Source[EventStreamElement[E], NotUsed]
-
-  def eventStream[E <: AggregateEvent](
-    tag:        Tag,
-    fromOffset: Offset
+    fromOffset: Offset,
+    name:       Option[String]              = None,
+    settings:   Option[EventStreamSettings] = None
   ): Source[EventStreamElement[E], NotUsed]
 
 }
@@ -150,26 +145,15 @@ class DomainImpl(
   }
 
   override def eventStream[E <: AggregateEvent](
-    settings: AggregateSettings
-  )(
     tag:        Tag,
-    fromOffset: Offset
+    fromOffset: Offset,
+    name:       Option[String],
+    settings:   Option[EventStreamSettings]
   ): Source[EventStreamElement[E], NotUsed] = {
-    readJournalProvider.readJournal(settings.readJournalPluginId).eventsByTag(tag.value, fromOffset)
-      .map { envelope ⇒
-        EventStreamElement[E](
-          envelope.persistenceId,
-          envelope.event.asInstanceOf[E],
-          envelope.offset
-        )
-      }
-  }
+    val eventStreamName = name.getOrElse(tag.value)
+    val eventStreamSettings = settings.getOrElse(EventStreamSettings(eventStreamName, system.settings.config))
 
-  override def eventStream[E <: AggregateEvent](
-    tag:        Tag,
-    fromOffset: Offset
-  ): Source[EventStreamElement[E], NotUsed] = {
-    readJournalProvider.readJournal(readJournalProvider.defaultReadJournalPluginId).eventsByTag(tag.value, fromOffset)
+    readJournalProvider.readJournal(eventStreamSettings.readJournalPluginId.getOrElse(readJournalProvider.defaultReadJournalPluginId)).eventsByTag(tag.value, fromOffset)
       .map { envelope ⇒
         EventStreamElement[E](
           envelope.persistenceId,
