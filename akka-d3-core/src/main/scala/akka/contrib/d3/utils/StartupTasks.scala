@@ -22,8 +22,8 @@ object StartupTasks extends ExtensionId[StartupTasks]
     new StartupTasksImpl(system, appConfig, cl)
   }
 
-  class Settings(classLoader: ClassLoader, cfg: Config) {
-    final val config: Config = {
+  final class Settings(classLoader: ClassLoader, cfg: Config) {
+    val config: Config = {
       val config = cfg.withFallback(ConfigFactory.defaultReference(classLoader))
       config.checkValid(ConfigFactory.defaultReference(classLoader), "akka.contrib.d3.utils.startup-tasks")
       config
@@ -31,14 +31,14 @@ object StartupTasks extends ExtensionId[StartupTasks]
 
     import config._
 
-    final val topology =
+    val topology: String =
       getString("akka.contrib.d3.topology") match {
         case "local"   ⇒ "local"
         case "cluster" ⇒ "cluster"
         case other     ⇒ throw new IllegalArgumentException(s"Unknown value $other for setting akka.contrib.d3.topology")
       }
 
-    final val startupTaskProviderClass =
+    val startupTaskProviderClass: String =
       Try(getString("akka.contrib.d3.utils.startup-tasks.provider")).toOption.getOrElse(topology) match {
         case "local"   ⇒ classOf[LocalStartupTaskProvider].getName
         case "cluster" ⇒ "akka.contrib.d3.utils.ClusterStartupTaskProvider"

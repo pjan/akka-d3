@@ -5,7 +5,7 @@ import akka.persistence.inmemory.query.scaladsl.InMemoryReadJournal
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl.EventsByTagQuery2
 
-class InMemoryReadJournalProvider(
+private[d3] final class InMemoryReadJournalProvider(
     system: ExtendedActorSystem
 ) extends ReadJournalProvider {
   override val defaultReadJournalPluginId: String = InMemoryReadJournal.Identifier

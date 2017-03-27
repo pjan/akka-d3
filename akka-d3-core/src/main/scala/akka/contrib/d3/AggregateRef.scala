@@ -29,10 +29,10 @@ protected[d3] class AggregateRef[E <: AggregateEntity](
     ec: ExecutionContext
 ) {
 
-  type Aggregate = E#Aggregate
-  type Command = E#Command
-  type Event = E#Event
-  type Events = collection.immutable.Seq[Event]
+  private type Aggregate = E#Aggregate
+  private type Command = E#Command
+  private type Event = E#Event
+  private type Events = collection.immutable.Seq[Event]
 
   private val askTimeout: Timeout =
     Timeout(timeoutDuration)

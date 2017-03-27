@@ -7,9 +7,9 @@ import scala.concurrent.duration._
 
 private[d3] object LocalSingletonProxySettings {
   def apply(
-    singletonName:                   String,
-    bufferSize:                      Int,
-    singletonIdentificationInterval: FiniteDuration
+    singletonName:                   String         = "singleton",
+    bufferSize:                      Int            = 10000,
+    singletonIdentificationInterval: FiniteDuration = 1.second
   ): LocalSingletonProxySettings =
     new LocalSingletonProxySettings(singletonName, bufferSize, singletonIdentificationInterval)
 }
@@ -48,6 +48,7 @@ private[d3] final class LocalSingletonProxy(
     singletonManagerPath: String,
     settings:             LocalSingletonProxySettings
 ) extends Actor with ActorLogging {
+  import LocalSingletonProxy._
   import settings._
   val singletonPath = (singletonManagerPath + "/" + settings.singletonName).split("/")
   var identifyCounter = 0
@@ -93,7 +94,7 @@ private[d3] final class LocalSingletonProxy(
 
     case _: ActorIdentity ⇒ // do nothing
 
-    case LocalSingletonProxy.TryToIdentifySingleton if identifyTimer.isDefined ⇒
+    case TryToIdentifySingleton if identifyTimer.isDefined ⇒
       val singletonAddress = RootActorPath(Address("akka", context.system.name)) / singletonPath
       log.debug("Trying to identify singleton at [{}]", singletonAddress)
       context.actorSelection(singletonAddress) ! Identify(identifyId)

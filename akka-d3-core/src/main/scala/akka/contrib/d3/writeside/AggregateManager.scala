@@ -23,15 +23,15 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
 ) extends Actor with ActorLogging {
   import AggregateManager._
 
-  type Aggregate = E
-  type Command = E#Command
-  type Event = E#Event
-  type Id = E#Id
+  private type Aggregate = E
+  private type Command = E#Command
+  private type Event = E#Event
+  private type Id = E#Id
 
-  var idByRef = Map.empty[ActorRef, Id]
-  var refById = Map.empty[Id, ActorRef]
-  var passivating = Set.empty[ActorRef]
-  var messageBuffers = Map.empty[Id, Vector[(Command, ActorRef)]]
+  private var idByRef = Map.empty[ActorRef, Id]
+  private var refById = Map.empty[Id, ActorRef]
+  private var passivating = Set.empty[ActorRef]
+  private var messageBuffers = Map.empty[Id, Vector[(Command, ActorRef)]]
 
   def totalBufferSize: Int = messageBuffers.foldLeft(0) { (sum, entity) ⇒ sum + entity._2.size }
 
@@ -46,31 +46,31 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
       receiveTerminated orElse
       receivePassivate
 
-  def receiveCommandMessage: Receive = {
+  private def receiveCommandMessage: Receive = {
     case CommandMessage(Id(id), Command(cmd)) ⇒
       deliverCommand(id, cmd, sender())
   }
 
-  def receiveQuery: Receive = {
+  private def receiveQuery: Receive = {
     case GetState(Id(id)) ⇒
       getAggregate(id).tell(AggregateActor.GetState(sender()), sender())
     case Exists(Id(id), p: (Aggregate ⇒ Boolean) @unchecked) ⇒
       getAggregate(id).tell(AggregateActor.Exists(sender(), p), sender())
   }
 
-  def receiveTerminated: Receive = {
+  private def receiveTerminated: Receive = {
     case Terminated(ref) if idByRef.contains(ref) ⇒
       aggregateTerminated(idByRef(ref))
   }
 
-  def receivePassivate: Receive = {
+  private def receivePassivate: Receive = {
     case RequestPassivation(stopMessage) if idByRef.contains(sender()) ⇒
       passivate(idByRef(sender()), stopMessage)
   }
 
   // Other
 
-  def aggregateTerminated(id: Id): Unit = {
+  private def aggregateTerminated(id: Id): Unit = {
     val messageBuffer = messageBuffers.getOrElse(id, Vector.empty)
     val ref = refById(id)
     if (messageBuffer.nonEmpty) {
@@ -83,7 +83,7 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
     passivating = passivating - ref
   }
 
-  def passivate(id: Id, stopMessage: Any): Unit = {
+  private def passivate(id: Id, stopMessage: Any): Unit = {
     if (!messageBuffers.contains(id)) {
       log.debug("Passivation started for aggregate {}", id)
 
@@ -93,7 +93,7 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
     }
   }
 
-  def passivationCompleted(event: AggregateStopped): Unit = {
+  private def passivationCompleted(event: AggregateStopped): Unit = {
     log.debug("Aggregate {} stopped", event.id)
 
     refById -= event.id
@@ -102,7 +102,7 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
     messageBuffers = messageBuffers - event.id
   }
 
-  def sendMessageBuffer(event: AggregateStarted): Unit = {
+  private def sendMessageBuffer(event: AggregateStarted): Unit = {
     val messageBuffer = messageBuffers.getOrElse(event.id, Vector.empty)
     messageBuffers = messageBuffers - event.id
 
@@ -116,7 +116,7 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
     }
   }
 
-  def deliverCommand(id: Id, command: Command, requester: ActorRef): Unit = {
+  private def deliverCommand(id: Id, command: Command, requester: ActorRef): Unit = {
     messageBuffers.get(id) match {
       case None ⇒
         deliverTo(id, command, requester)
@@ -129,11 +129,11 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
     }
   }
 
-  def deliverTo(id: Id, command: Command, requester: ActorRef): Unit = {
+  private def deliverTo(id: Id, command: Command, requester: ActorRef): Unit = {
     getAggregate(id).tell(command, requester)
   }
 
-  def getAggregate(id: Id): ActorRef = {
+  private def getAggregate(id: Id): ActorRef = {
     val name = id.value
     context.child(name).getOrElse {
       log.debug("Starting aggregate {}", id)
@@ -145,18 +145,18 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
     }
   }
 
-  def aggregateProps(id: Id): Props = {
+  private def aggregateProps(id: Id): Props = {
     AggregateActor.props[Aggregate](id, entityFactory, settings)
   }
 
   // Extractors
 
-  object Id {
+  private object Id {
     def unapply(id: AggregateId): Option[Id] =
       Option(id.asInstanceOf[Id])
   }
 
-  object Command {
+  private object Command {
     def unapply(cmd: AggregateCommand): Option[Command] =
       Option(cmd.asInstanceOf[Command])
   }

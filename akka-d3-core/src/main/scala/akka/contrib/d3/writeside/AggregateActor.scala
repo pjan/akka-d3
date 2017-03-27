@@ -29,10 +29,10 @@ private[d3] class AggregateActor[E <: AggregateEntity](
   import AggregateActor._
   import AggregateState._
 
-  type Aggregate = entity.Aggregate
-  type Command = entity.Command
-  type Event = entity.Event
-  type State = entity.State
+  private type Aggregate = entity.Aggregate
+  private type Command = entity.Command
+  private type Event = entity.Event
+  private type State = entity.State
 
   implicit private val system = context.system
   implicit private val dispatcher = context.dispatcher

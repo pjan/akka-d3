@@ -3,7 +3,9 @@ package akka.contrib.d3.utils
 import akka.actor._
 
 private[d3] object LocalSingletonManagerSettings {
-  def apply(singletonName: String): LocalSingletonManagerSettings =
+  def apply(
+    singletonName: String = "singleton"
+  ): LocalSingletonManagerSettings =
     new LocalSingletonManagerSettings(singletonName)
 }
 
@@ -25,16 +27,16 @@ private[d3] object LocalSingletonManager {
     settings:       LocalSingletonManagerSettings
   ): Props =
     Props(new LocalSingletonManager(singletonProps, settings))
+
+  private case object Start
 }
 
 private[d3] final class LocalSingletonManager(
     singletonProps: Props,
     settings:       LocalSingletonManagerSettings
 ) extends Actor {
-
+  import LocalSingletonManager._
   import settings._
-
-  private case object Start
 
   override def preStart(): Unit = {
     self ! Start
@@ -42,13 +44,13 @@ private[d3] final class LocalSingletonManager(
 
   override def receive: Receive = started
 
-  def started: Receive = {
+  private def started: Receive = {
     case Start ⇒
       val singleton = createSingleton()
       context.become(active(singleton))
   }
 
-  def active(singleton: ActorRef): Receive = {
+  private def active(singleton: ActorRef): Receive = {
     case Start ⇒ // already started
 
     case Terminated(ref) if ref == singleton ⇒

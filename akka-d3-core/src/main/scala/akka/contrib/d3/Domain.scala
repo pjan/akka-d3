@@ -27,30 +27,30 @@ object Domain extends ExtensionId[Domain]
     new DomainImpl(system, appConfig, cl)
   }
 
-  class Settings(classLoader: ClassLoader, cfg: Config) {
-    final val config: Config = {
+  final class Settings(classLoader: ClassLoader, cfg: Config) {
+    val config: Config = {
       val config = cfg.withFallback(ConfigFactory.defaultReference(classLoader))
-      config.checkValid(ConfigFactory.defaultReference(classLoader), "akka.contrib.d3")
+      config.checkValid(ConfigFactory.defaultReference(classLoader), "akka.contrib.d3.writeside")
       config
     }
 
     import config._
 
-    final val topology =
+    val topology: String =
       getString("akka.contrib.d3.topology") match {
         case "local"   ⇒ "local"
         case "cluster" ⇒ "cluster"
         case other     ⇒ throw new IllegalArgumentException(s"Unknown value $other for setting akka.contrib.d3.topology")
       }
 
-    final val amProviderClass =
-      Try(getString("akka.contrib.d3.provider")).toOption.getOrElse(topology) match {
+    val amProviderClass: String =
+      Try(getString("akka.contrib.d3.writeside.provider")).toOption.getOrElse(topology) match {
         case "local"   ⇒ classOf[LocalAggregateManagerProvider].getName
         case "cluster" ⇒ "akka.contrib.d3.writeside.ClusterAggregateManagerProvider"
         case fqcn      ⇒ fqcn
       }
 
-    final val readJournalProviderClass =
+    val readJournalProviderClass: String =
       getString("akka.contrib.d3.query.provider") match {
         case "empty"     ⇒ classOf[query.EmptyReadJournalProvider].getName
         case "in-memory" ⇒ "akka.contrib.d3.query.InMemoryReadJournalProvider"
@@ -98,8 +98,6 @@ class DomainImpl(
   import Domain._
 
   final val settings: Settings = new Settings(classLoader, applicationConfig)
-
-  protected val dynamicAccess: DynamicAccess = system.dynamicAccess
 
   private val registeredTypeNames: ConcurrentMap[String, ClassTag[_]] = collection.concurrent.TrieMap()
   private val aggregateManagers: ConcurrentMap[ClassTag[_], ActorRef] = collection.concurrent.TrieMap()
@@ -164,6 +162,8 @@ class DomainImpl(
   }
 
   import settings._
+
+  private val dynamicAccess: DynamicAccess = system.dynamicAccess
 
   private val aggregateManagerProvider: AggregateManagerProvider = try {
     val arguments = Vector(

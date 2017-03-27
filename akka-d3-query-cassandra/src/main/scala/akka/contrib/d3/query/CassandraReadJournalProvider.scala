@@ -5,7 +5,7 @@ import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
 import akka.persistence.query.PersistenceQuery
 import akka.persistence.query.scaladsl.EventsByTagQuery2
 
-class CassandraReadJournalProvider(
+private[d3] final class CassandraReadJournalProvider(
     system: ExtendedActorSystem
 ) extends ReadJournalProvider {
   override val defaultReadJournalPluginId: String = CassandraReadJournal.Identifier

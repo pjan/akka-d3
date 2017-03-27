@@ -6,7 +6,7 @@ import akka.persistence.query.{EventEnvelope2, Offset}
 import akka.persistence.query.scaladsl.EventsByTagQuery2
 import akka.stream.scaladsl.Source
 
-class EmptyReadJournalProvider(
+final class EmptyReadJournalProvider(
     system: ExtendedActorSystem
 ) extends ReadJournalProvider {
   override val defaultReadJournalPluginId: String = ""
