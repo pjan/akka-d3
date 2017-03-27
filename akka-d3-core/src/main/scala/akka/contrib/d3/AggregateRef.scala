@@ -54,10 +54,7 @@ protected[d3] class AggregateRef[E <: AggregateEntity](
   def state: Future[Either[Throwable, Aggregate]] =
     askableAggregateManager.ask(AggregateManager.GetState(identifier))(askTimeout).mapTo[Either[Throwable, Aggregate]]
 
-  def exists(p: Aggregate ⇒ Boolean): Future[Boolean] =
-    askableAggregateManager.ask(AggregateManager.Exists(identifier, p))(askTimeout).mapTo[Boolean]
-
   def isInitialized: Future[Boolean] =
-    exists(_ ⇒ true)
+    state.map(_.isRight)
 
 }

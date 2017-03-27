@@ -1,6 +1,6 @@
 package akka.contrib.d3
 
-sealed abstract class AggregateState[+A <: AggregateLike] {
+sealed abstract class AggregateState[+A <: AggregateLike] extends Serializable {
   def aggregateId: A#Id
   def isInitialized: Boolean
 }

@@ -11,7 +11,6 @@ import scala.util.control.NonFatal
 private[d3] object AggregateActor {
   @SerialVersionUID(1L) case object Passivate
   @SerialVersionUID(1L) final case class GetState(requester: ActorRef)
-  @SerialVersionUID(1L) final case class Exists[A <: AggregateLike](requester: ActorRef, pred: A ⇒ Boolean)
 
   def props[E <: AggregateEntity](
     identifier:    E#Id,
@@ -125,11 +124,7 @@ private[d3] class AggregateActor[E <: AggregateEntity](
 
   private def defaultReceive: Receive = {
     case GetState(requester) ⇒ sendState(requester)
-    case Exists(requester, p: (Aggregate ⇒ Boolean) @unchecked) ⇒ aggregateState match {
-      case Uninitialized(_) ⇒ requester ! aggregateState.isInitialized
-      case Initialized(a)   ⇒ requester ! p(a)
-    }
-    case Passivate ⇒ context.stop(self)
+    case Passivate           ⇒ context.stop(self)
     case x: SaveSnapshotSuccess ⇒
       lastSnapshotSequenceNr.foreach { sequenceNr ⇒
         deleteSnapshots(SnapshotSelectionCriteria(maxSequenceNr = sequenceNr))

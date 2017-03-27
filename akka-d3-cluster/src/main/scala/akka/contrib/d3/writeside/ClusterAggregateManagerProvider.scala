@@ -18,7 +18,6 @@ private[d3] object ClusterAggregateManagerProvider {
     override def entityId(message: Any): String = message match {
       case AggregateManager.CommandMessage(id, cmd) ⇒ (math.abs(id.value.hashCode) % maxNumberOfShards).toString
       case AggregateManager.GetState(id)            ⇒ (math.abs(id.value.hashCode) % maxNumberOfShards).toString
-      case AggregateManager.Exists(id, _)           ⇒ (math.abs(id.value.hashCode) % maxNumberOfShards).toString
     }
   }
 

@@ -6,7 +6,6 @@ import akka.contrib.d3._
 private[d3] object AggregateManager {
   sealed trait AggregateQuery
   @SerialVersionUID(1L) final case class GetState(id: AggregateId) extends AggregateQuery
-  @SerialVersionUID(1L) final case class Exists[A <: AggregateLike](id: AggregateId, pred: A ⇒ Boolean) extends AggregateQuery
   @SerialVersionUID(1L) final case class CommandMessage(id: AggregateId, command: AggregateCommand)
   @SerialVersionUID(1L) final case class RequestPassivation(stopMessage: Any)
 
@@ -54,8 +53,6 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
   private def receiveQuery: Receive = {
     case GetState(Id(id)) ⇒
       getAggregate(id).tell(AggregateActor.GetState(sender()), sender())
-    case Exists(Id(id), p: (Aggregate ⇒ Boolean) @unchecked) ⇒
-      getAggregate(id).tell(AggregateActor.Exists(sender(), p), sender())
   }
 
   private def receiveTerminated: Receive = {
