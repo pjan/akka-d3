@@ -5,8 +5,8 @@ import akka.contrib.d3._
 
 private[d3] object AggregateManager {
   sealed trait AggregateQuery
-  @SerialVersionUID(1L) final case class GetState(id: AggregateId) extends AggregateQuery
   @SerialVersionUID(1L) final case class CommandMessage(id: AggregateId, command: AggregateCommand)
+  @SerialVersionUID(1L) final case class GetState(id: AggregateId) extends AggregateQuery
   @SerialVersionUID(1L) final case class RequestPassivation(stopMessage: Any)
 
   def props[E <: AggregateEntity](

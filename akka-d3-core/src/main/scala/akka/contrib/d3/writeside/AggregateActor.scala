@@ -9,8 +9,8 @@ import scala.concurrent.{Future, TimeoutException}
 import scala.util.control.NonFatal
 
 private[d3] object AggregateActor {
-  @SerialVersionUID(1L) case object Passivate
   @SerialVersionUID(1L) final case class GetState(requester: ActorRef)
+  @SerialVersionUID(1L) case object Passivate
 
   def props[E <: AggregateEntity](
     identifier:    E#Id,

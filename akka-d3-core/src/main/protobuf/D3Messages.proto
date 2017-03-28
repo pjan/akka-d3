@@ -1,0 +1,50 @@
+syntax = "proto2";
+
+package akka.contrib.d3;
+
+option java_package = "akka.contrib.d3.protobuf.msg";
+option optimize_for = SPEED;
+
+message ActorRef {
+  required string path = 1;
+}
+
+message AAGetState {
+  required ActorRef requester = 1;
+}
+
+message AAPassivate {
+}
+
+message AMCommandMessage {
+  required bytes id = 1;
+  required int32 idSerializerId = 2;
+  optional bytes idManifest = 3;
+  required bytes command = 4;
+  required int32 commandSerializerId = 5;
+  optional bytes commandManifest = 6;
+}
+
+message AMGetState {
+  required bytes id = 1;
+  required int32 idSerializerId = 2;
+  optional bytes idManifest = 3;
+}
+
+message AMRequestPassivation {
+  required bytes msg = 1;
+  required int32 msgSerializerId = 2;
+  optional bytes msgManifest = 3;
+}
+
+message ASInitialized {
+  required bytes state = 1;
+  required int32 stateSerializerId = 2;
+  optional bytes stateManifest = 3;
+}
+
+message ASUninitialized {
+  required bytes id = 1;
+  required int32 idSerializerId = 2;
+  optional bytes idManifest = 3;
+}

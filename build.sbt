@@ -5,6 +5,7 @@ import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import spray.revolver.RevolverPlugin.Revolver
 import ReleaseTransformations._
+import akka.Protobuf
 
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scalariform.formatter.preferences.AlignSingleLineCaseStatements.MaxArrowIndent
@@ -155,6 +156,8 @@ lazy val promptSettings = Seq(
   ))
 )
 
+lazy val protobufSettings = Protobuf.settings
+
 lazy val scoverageSettings = Seq(
   coverageMinimum := 60,
   coverageFailOnMinimum := false,
@@ -282,6 +285,7 @@ lazy val core = Project(
   )
   .settings(d3Settings)
   .settings(commonJvmSettings)
+  .settings(protobufSettings)
 
 lazy val cluster = Project(
     id = "cluster",
@@ -337,6 +341,6 @@ lazy val queryCassandra = Project(
 
 addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVersion.value.get + \"-SNAPSHOT\"")
 
-addCommandAlias("build", ";clean;scalariformFormat;scalastyle;test")
+addCommandAlias("build", ";clean;scalariformFormat;scalastyle;protobufGenerate;test")
 
-addCommandAlias("validate", ";clean;scalastyle;test")
+addCommandAlias("validate", ";clean;scalastyle;protobufGenerate;test")
