@@ -1,7 +1,7 @@
 package akka.contrib.d3
 
 import akka.dispatch.Dispatchers
-import com.typesafe.config.Config
+import com.typesafe.config._
 
 import scala.concurrent.duration._
 
@@ -31,14 +31,14 @@ object AggregateSettings {
 
 }
 
-final class AggregateSettings(
-  val config:                 Config,
-  val passivationTimeout:     FiniteDuration,
-  val commandHandlingTimeout: FiniteDuration,
-  val askTimeout:             FiniteDuration,
-  val eventsPerSnapshot:      Int,
-  val bufferSize:             Int,
-  val dispatcher:             String,
-  val journalPluginId:        String,
-  val snapshotPluginId:       String
+final case class AggregateSettings(
+  config:                 Config,
+  passivationTimeout:     FiniteDuration,
+  commandHandlingTimeout: FiniteDuration,
+  askTimeout:             FiniteDuration,
+  eventsPerSnapshot:      Int,
+  bufferSize:             Int,
+  dispatcher:             String,
+  journalPluginId:        String,
+  snapshotPluginId:       String
 )

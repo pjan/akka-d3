@@ -48,3 +48,50 @@ message ASUninitialized {
   required int32 idSerializerId = 2;
   optional bytes idManifest = 3;
 }
+
+message RAEnsureActive {
+  required string name = 1;
+}
+
+message RAEnsureStopped {
+  required string name = 1;
+}
+
+message RAAttemptRewind {
+  required string name = 1;
+  required bytes offset = 2;
+  required int32 offsetSerializerId = 3;
+  optional bytes offsetManifest = 4;
+}
+
+message RCIsActive {
+  required string name = 1;
+}
+
+message RCIsStopped {
+  required string name = 1;
+}
+
+message RCRegister {
+  required string name = 1;
+  required ActorRef actorRef = 2;
+}
+
+message RCRewind {
+  required string name = 1;
+  required bytes offset = 2;
+  required int32 offsetSerializerId = 3;
+  optional bytes offsetManifest = 4;
+}
+
+message RCStart {
+  required string name = 1;
+}
+
+message RCStop {
+  required string name = 1;
+}
+
+message AggregateSettings {
+  required string config = 1;
+}
