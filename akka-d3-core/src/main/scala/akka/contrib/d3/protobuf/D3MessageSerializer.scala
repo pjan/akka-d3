@@ -5,6 +5,8 @@ import akka.contrib.d3._
 import writeside._
 import akka.protobuf.ByteString
 import akka.contrib.d3.protobuf.msg.{D3Messages ⇒ pm}
+import akka.contrib.d3.readside.{ReadSideActor, ReadSideCoordinator}
+import akka.persistence.query.Offset
 import akka.serialization._
 
 private[d3] object D3MessageSerializer {
@@ -15,6 +17,15 @@ private[d3] object D3MessageSerializer {
   final val AMRequestPassivationManifest = "D3AMR"
   final val ASInitializedManifest = "D3ASI"
   final val ASUninitializedManifest = "D3ASU"
+  final val RAEnsureActiveManifest = "D3RAEA"
+  final val RAEnsureStoppedManifest = "D3RAES"
+  final val RAAttemptRewindManifest = "D3RAAR"
+  final val RCIsActiveManifest = "D3RCIA"
+  final val RCIsStoppedManifest = "D3RCIS"
+  final val RCRegisterManifest = "D3RCR"
+  final val RCRewindManifest = "D3RCR"
+  final val RCStartManifest = "D3RCSTART"
+  final val RCStopManifest = "D3RCSTOP"
 }
 
 private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
@@ -39,7 +50,16 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     AMGetStateManifest → amGetStateFromBinary,
     AMRequestPassivationManifest → amRequestPassivationFromBinary,
     ASInitializedManifest → asInitializedFromBinary,
-    ASUninitializedManifest → asUninitializedFromBinary
+    ASUninitializedManifest → asUninitializedFromBinary,
+    RAEnsureActiveManifest → raEnsureActiveFromBinary,
+    RAEnsureStoppedManifest → raEnsureStoppedFromBinary,
+    RAAttemptRewindManifest → raAttemptRewindFromBinary,
+    RCIsActiveManifest → rcIsActiveFromBinary,
+    RCIsStoppedManifest → rcIsStoppedFromBinary,
+    RCRegisterManifest → rcRegisterFromBinary,
+    RCRewindManifest → rcRewindFromBinary,
+    RCStartManifest → rcStartFromBinary,
+    RCStopManifest → rcStopFromBinary
   )
 
   override def manifest(obj: AnyRef): String = obj match {
@@ -50,6 +70,15 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     case _: AggregateManager.RequestPassivation ⇒ AMRequestPassivationManifest
     case _: AggregateState.Initialized[_]       ⇒ ASInitializedManifest
     case _: AggregateState.Uninitialized[_]     ⇒ ASUninitializedManifest
+    case _: ReadSideActor.EnsureActive          ⇒ RAEnsureActiveManifest
+    case _: ReadSideActor.EnsureStopped         ⇒ RAEnsureStoppedManifest
+    case _: ReadSideActor.AttemptRewind         ⇒ RAAttemptRewindManifest
+    case _: ReadSideCoordinator.IsActive        ⇒ RCIsActiveManifest
+    case _: ReadSideCoordinator.IsStopped       ⇒ RCIsStoppedManifest
+    case _: ReadSideCoordinator.Register        ⇒ RCRegisterManifest
+    case _: ReadSideCoordinator.Rewind          ⇒ RCRewindManifest
+    case _: ReadSideCoordinator.Start           ⇒ RCStartManifest
+    case _: ReadSideCoordinator.Stop            ⇒ RCStopManifest
     case _ ⇒
       throw new IllegalArgumentException(s"Can't serialize object of type ${obj.getClass} in [${getClass.getName}]")
   }
@@ -62,6 +91,15 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     case m: AggregateManager.RequestPassivation ⇒ amRequestPassivationToProto(m).toByteArray
     case m: AggregateState.Initialized[_]       ⇒ asInitializedToProto(m).toByteArray
     case m: AggregateState.Uninitialized[_]     ⇒ asUninitializedToProto(m).toByteArray
+    case m: ReadSideActor.EnsureActive          ⇒ raEnsureActiveToProto(m).toByteArray
+    case m: ReadSideActor.EnsureStopped         ⇒ raEnsureStoppedToProto(m).toByteArray
+    case m: ReadSideActor.AttemptRewind         ⇒ raAttemptRewindToProto(m).toByteArray
+    case m: ReadSideCoordinator.IsActive        ⇒ rcIsActiveToProto(m).toByteArray
+    case m: ReadSideCoordinator.IsStopped       ⇒ rcIsStoppedToProto(m).toByteArray
+    case m: ReadSideCoordinator.Register        ⇒ rcRegisterToProto(m).toByteArray
+    case m: ReadSideCoordinator.Rewind          ⇒ rcRewindToProto(m).toByteArray
+    case m: ReadSideCoordinator.Start           ⇒ rcStartToProto(m).toByteArray
+    case m: ReadSideCoordinator.Stop            ⇒ rcStopToProto(m).toByteArray
     case _ ⇒
       throw new IllegalArgumentException(s"Can't serialize object of type ${obj.getClass} in [${getClass.getName}]")
   }
@@ -295,6 +333,188 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
       idManifest
     ).get
     AggregateState.Uninitialized(id.asInstanceOf[AggregateLike#Id])
+  }
+
+  // ReadSideActor#EnsureActive
+
+  private def raEnsureActiveToProto(ensureActive: ReadSideActor.EnsureActive): pm.RAEnsureActive = {
+    pm.RAEnsureActive.newBuilder()
+      .setName(ensureActive.name)
+      .build()
+  }
+
+  private def raEnsureActiveFromBinary(bytes: Array[Byte]): ReadSideActor.EnsureActive =
+    raEnsureActiveFromProto(pm.RAEnsureActive.parseFrom(bytes))
+
+  private def raEnsureActiveFromProto(ensureActive: pm.RAEnsureActive): ReadSideActor.EnsureActive = {
+    ReadSideActor.EnsureActive(ensureActive.getName)
+  }
+
+  // ReadSideActor#EnsureStopped
+
+  private def raEnsureStoppedToProto(ensureStopped: ReadSideActor.EnsureStopped): pm.RAEnsureStopped = {
+    pm.RAEnsureStopped.newBuilder()
+      .setName(ensureStopped.name)
+      .build()
+  }
+
+  private def raEnsureStoppedFromBinary(bytes: Array[Byte]): ReadSideActor.EnsureStopped =
+    raEnsureStoppedFromProto(pm.RAEnsureStopped.parseFrom(bytes))
+
+  private def raEnsureStoppedFromProto(ensureStopped: pm.RAEnsureStopped): ReadSideActor.EnsureStopped = {
+    ReadSideActor.EnsureStopped(ensureStopped.getName)
+  }
+
+  // ReadSideActor#AttemptRewind
+
+  private def raAttemptRewindToProto(attemptRewind: ReadSideActor.AttemptRewind): pm.RAAttemptRewind = {
+    val offset = attemptRewind.offset.asInstanceOf[AnyRef]
+    val offsetSerializer = serialization.findSerializerFor(offset)
+    val builder = pm.RAAttemptRewind.newBuilder()
+      .setName(attemptRewind.name)
+      .setOffset(ByteString.copyFrom(offsetSerializer.toBinary(offset)))
+      .setOffsetSerializerId(offsetSerializer.identifier)
+
+    offsetSerializer match {
+      case ser2: SerializerWithStringManifest ⇒
+        val manifest = ser2.manifest(offset)
+        if (manifest != "")
+          builder.setOffsetManifest(ByteString.copyFromUtf8(manifest))
+      case _ ⇒
+        if (offsetSerializer.includeManifest)
+          builder.setOffsetManifest(ByteString.copyFromUtf8(offset.getClass.getName))
+    }
+
+    builder.build()
+  }
+
+  private def raAttemptRewindFromBinary(bytes: Array[Byte]): ReadSideActor.AttemptRewind =
+    raAttemptRewindFromProto(pm.RAAttemptRewind.parseFrom(bytes))
+
+  private def raAttemptRewindFromProto(attemptRewind: pm.RAAttemptRewind): ReadSideActor.AttemptRewind = {
+    val offsetManifest = if (attemptRewind.hasOffsetManifest) attemptRewind.getOffsetManifest.toStringUtf8 else ""
+    val offset = ser.deserialize(
+      attemptRewind.getOffset.toByteArray,
+      attemptRewind.getOffsetSerializerId,
+      offsetManifest
+    ).get
+    ReadSideActor.AttemptRewind(attemptRewind.getName, offset.asInstanceOf[Offset])
+  }
+
+  // ReadSideCoordinator#IsActive
+
+  private def rcIsActiveToProto(isActive: ReadSideCoordinator.IsActive): pm.RCIsActive = {
+    pm.RCIsActive.newBuilder()
+      .setName(isActive.name)
+      .build()
+  }
+
+  private def rcIsActiveFromBinary(bytes: Array[Byte]): ReadSideCoordinator.IsActive =
+    rcIsActiveFromProto(pm.RCIsActive.parseFrom(bytes))
+
+  private def rcIsActiveFromProto(isActive: pm.RCIsActive): ReadSideCoordinator.IsActive = {
+    ReadSideCoordinator.IsActive(isActive.getName)
+  }
+
+  // ReadSideCoordinator#IsStopped
+
+  private def rcIsStoppedToProto(isStopped: ReadSideCoordinator.IsStopped): pm.RCIsStopped = {
+    pm.RCIsStopped.newBuilder()
+      .setName(isStopped.name)
+      .build()
+  }
+
+  private def rcIsStoppedFromBinary(bytes: Array[Byte]): ReadSideCoordinator.IsStopped =
+    rcIsStoppedFromProto(pm.RCIsStopped.parseFrom(bytes))
+
+  private def rcIsStoppedFromProto(isStopped: pm.RCIsStopped): ReadSideCoordinator.IsStopped = {
+    ReadSideCoordinator.IsStopped(isStopped.getName)
+  }
+
+  // ReadSideCoordinator#Register
+
+  private def rcRegisterToProto(register: ReadSideCoordinator.Register): pm.RCRegister = {
+    val actorRefMessage = pm.ActorRef.newBuilder()
+      .setPath(Serialization.serializedActorPath(register.actorRef)).build()
+
+    val builder = pm.RCRegister.newBuilder()
+      .setName(register.name)
+      .setActorRef(actorRefMessage)
+
+    builder.build()
+  }
+
+  private def rcRegisterFromBinary(bytes: Array[Byte]): ReadSideCoordinator.Register =
+    rcRegisterFromProto(pm.RCRegister.parseFrom(bytes))
+
+  private def rcRegisterFromProto(register: pm.RCRegister): ReadSideCoordinator.Register = {
+    ReadSideCoordinator.Register(register.getName, system.provider.resolveActorRef(register.getActorRef.getPath))
+  }
+
+  // ReadSideCoordinator#Rewind
+
+  private def rcRewindToProto(rewind: ReadSideCoordinator.Rewind): pm.RCRewind = {
+    val offset = rewind.offset.asInstanceOf[AnyRef]
+    val offsetSerializer = serialization.findSerializerFor(offset)
+    val builder = pm.RCRewind.newBuilder()
+      .setName(rewind.name)
+      .setOffset(ByteString.copyFrom(offsetSerializer.toBinary(offset)))
+      .setOffsetSerializerId(offsetSerializer.identifier)
+
+    offsetSerializer match {
+      case ser2: SerializerWithStringManifest ⇒
+        val manifest = ser2.manifest(offset)
+        if (manifest != "")
+          builder.setOffsetManifest(ByteString.copyFromUtf8(manifest))
+      case _ ⇒
+        if (offsetSerializer.includeManifest)
+          builder.setOffsetManifest(ByteString.copyFromUtf8(offset.getClass.getName))
+    }
+
+    builder.build()
+  }
+
+  private def rcRewindFromBinary(bytes: Array[Byte]): ReadSideCoordinator.Rewind =
+    rcRewindFromProto(pm.RCRewind.parseFrom(bytes))
+
+  private def rcRewindFromProto(rewind: pm.RCRewind): ReadSideCoordinator.Rewind = {
+    val offsetManifest = if (rewind.hasOffsetManifest) rewind.getOffsetManifest.toStringUtf8 else ""
+    val offset = ser.deserialize(
+      rewind.getOffset.toByteArray,
+      rewind.getOffsetSerializerId,
+      offsetManifest
+    ).get
+    ReadSideCoordinator.Rewind(rewind.getName, offset.asInstanceOf[Offset])
+  }
+
+  // ReadSideCoordinator#Start
+
+  private def rcStartToProto(start: ReadSideCoordinator.Start): pm.RCStart = {
+    pm.RCStart.newBuilder()
+      .setName(start.name)
+      .build()
+  }
+
+  private def rcStartFromBinary(bytes: Array[Byte]): ReadSideCoordinator.Start =
+    rcStartFromProto(pm.RCStart.parseFrom(bytes))
+
+  private def rcStartFromProto(start: pm.RCStart): ReadSideCoordinator.Start = {
+    ReadSideCoordinator.Start(start.getName)
+  }
+
+  // ReadSideCoordinator#Stop
+
+  private def rcStopToProto(stop: ReadSideCoordinator.Stop): pm.RCStop = {
+    pm.RCStop.newBuilder()
+      .setName(stop.name)
+      .build()
+  }
+
+  private def rcStopFromBinary(bytes: Array[Byte]): ReadSideCoordinator.Stop =
+    rcStopFromProto(pm.RCStop.parseFrom(bytes))
+
+  private def rcStopFromProto(stop: pm.RCStop): ReadSideCoordinator.Stop = {
+    ReadSideCoordinator.Stop(stop.getName)
   }
 
 }
