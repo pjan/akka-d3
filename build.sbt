@@ -197,12 +197,10 @@ lazy val wartRemoverSettings = Seq(
 lazy val micrositesSettings = Seq(
   micrositeName := "akka-d3",
   micrositeDescription := "A library for Domain Driven Design, with Event Sourcing & CQRS, on top of Akka",
-  micrositeBaseUrl := "",
-  micrositeDocumentationUrl := "/docs/",
+  micrositeBaseUrl := "akka-d3",
+  micrositeDocumentationUrl := "/akka-d3/docs/",
   micrositeGithubOwner := "pjan",
   micrositeGithubRepo := "akka-d3",
-  micrositeAuthor := "pjan",
-  micrositeHomepage := "http://www.pjan.io",
   micrositeHighlightTheme := "color-brewer",
   includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.md"
 )
