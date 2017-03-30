@@ -357,6 +357,21 @@ lazy val queryCassandra = Project(
   .settings(d3Settings)
   .settings(commonJvmSettings)
 
+lazy val readsideCassandra = Project(
+    id = "readside-cassandra",
+    base = file("akka-d3-readside-cassandra")
+  )
+  .settings(moduleName := "akka-d3-readside-cassandra")
+  .settings(
+    libraryDependencies ++= Seq(
+      D.akkaPersistenceCassandra,
+      compilerPlugin(D.kindProjector)
+    )
+  )
+  .dependsOn(core, queryCassandra)
+  .settings(d3Settings)
+  .settings(commonJvmSettings)
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Commands
 ///////////////////////////////////////////////////////////////////////////////////////////////////
