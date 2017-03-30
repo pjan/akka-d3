@@ -1,3 +1,18 @@
 options:
   - title: Introduction
     url: docs/intro.html
+
+  - title: Write Side
+    url: docs/writeside.html
+    menu_section: writeside
+
+    nested_options:
+    - title: Aggregate
+      url: docs/writeside.html#aggregate
+      menu_section: writeside
+    - title: Protocol
+      url: docs/writeside.html#protocol
+      menu_section: writeside
+    - title: Entity
+      url: docs/writeside.html#entity
+      menu_section: writeside
