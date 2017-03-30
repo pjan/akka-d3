@@ -18,16 +18,29 @@ matrix:
   - scala: 2.12.1
     jdk: oraclejdk8
 
-script:
-  - scripts/travis.sh
-
 before_install:
   - wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.bz2
   - tar -xvf protobuf-2.5.0.tar.bz2
   - cd protobuf-2.5.0 && ./configure --prefix=/usr && make && sudo make install && cd .. && rm -rf protobuf-2.5.0
+  - if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then bash
+    scripts/decrypt-keys.sh; fi
+  - export PATH=${PATH}:./vendor/bundle
 
 install:
   - pip install --user codecov
+  - rvm use 2.2.3 --install --fuzzy
+  - gem update --system
+  - gem install sass
+  - gem install jekyll -v 3.2.1
+
+script:
+  - scripts/travis.sh
+
+after_success:
+- if [ "$TRAVIS_BRANCH" = "master" -a "$TRAVIS_PULL_REQUEST" = "false" ]; then bash
+  scripts/publish-microsite.sh; fi
+- if [ "$TRAVIS_PULL_REQUEST" = "true" ]; then echo "Not in master branch, skipping
+  deploy and release"; fi
 
 env:
   global:
