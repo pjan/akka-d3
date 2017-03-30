@@ -3,9 +3,7 @@ import com.scalapenos.sbt.prompt._
 import SbtPrompt.autoImport._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import spray.revolver.RevolverPlugin.Revolver
 import ReleaseTransformations._
-import akka.Protobuf
 
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scalariform.formatter.preferences.AlignSingleLineCaseStatements.MaxArrowIndent
@@ -156,7 +154,7 @@ lazy val promptSettings = Seq(
   ))
 )
 
-lazy val protobufSettings = Protobuf.settings
+lazy val protobufSettings = akka.Protobuf.settings
 
 lazy val scoverageSettings = Seq(
   coverageMinimum := 60,
@@ -192,14 +190,29 @@ lazy val warnUnusedImport = Seq(
   scalacOptions in (Test, console) := (scalacOptions in (Compile, console)).value
 )
 
-lazy val revolverSettings =
-  Revolver.settings
-
 lazy val wartRemoverSettings = Seq(
   wartremoverErrors ++= Warts.unsafe
 )
 
-lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ formatSettings ++ promptSettings ++ revolverSettings ++ scoverageSettings
+lazy val micrositesSettings = Seq(
+  micrositeName := "akka-d3",
+  micrositeDescription := "A library for Domain Driven Design, with Event Sourcing & CQRS, on top of Akka",
+  micrositeBaseUrl := "",
+  micrositeDocumentationUrl := "/docs/",
+  micrositeGithubOwner := "pjan",
+  micrositeGithubRepo := "akka-d3",
+  micrositeAuthor := "pjan",
+  micrositeHomepage := "http://www.pjan.io",
+  micrositeHighlightTheme := "color-brewer",
+  includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.md"
+)
+
+lazy val buildInfoSettings = Seq(
+  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+  buildInfoPackage := "akka.contrib.d3"
+)
+
+lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ formatSettings ++ promptSettings ++ scoverageSettings
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Dependencies
@@ -266,6 +279,17 @@ lazy val d3 = project.in(file(".d3"))
   .settings(commonJvmSettings)
   .aggregate(core, cluster)
   .dependsOn(core, cluster)
+
+lazy val docs = Project(
+    id = "docs",
+    base = file("docs")
+  )
+  .settings(moduleName := "docs")
+  .settings(d3Settings)
+  .settings(micrositesSettings)
+  .settings(buildInfoSettings)
+  .enablePlugins(MicrositesPlugin)
+  .enablePlugins(BuildInfoPlugin)
 
 lazy val core = Project(
     id = "core",

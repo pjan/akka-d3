@@ -1,12 +1,9 @@
-/**
-  * Copyright (C) 2009-2017 Lightbend Inc. <http://www.lightbend.com>
-  */
-
 package akka
+
+import java.io.PrintWriter
 
 import sbt._
 import Keys._
-import com.typesafe.sbt.preprocess.Preprocess._
 
 import java.io.File
 
@@ -82,5 +79,44 @@ object Protobuf {
         if (exitCode != 0)
           sys.error("protoc returned exit code: %d" format exitCode)
       }
+  }
+
+  private def transformDirectory(sourceDir: File, targetDir: File, transformable: File => Boolean, transform: (File, File) => Unit, cache: File, log: Logger): File = {
+    val runTransform = FileFunction.cached(cache)(FilesInfo.hash, FilesInfo.exists) { (in, out) =>
+      val map = Path.rebase(sourceDir, targetDir)
+      if (in.removed.nonEmpty || in.modified.nonEmpty) {
+        log.info("Preprocessing directory %s..." format sourceDir)
+        for {
+          source <- in.removed
+          target <- map(source)
+        } {
+          IO.delete(target)
+        }
+        val updated = for {
+          source <- in.modified
+          target <- map(source)
+        } yield {
+          if (source.isFile) {
+            if (transformable(source)) transform(source, target)
+            else IO.copyFile(source, target)
+          }
+          target
+        }
+        log.info("Directory preprocessed: " + targetDir)
+        updated
+      } else Set.empty
+    }
+    val sources = (sourceDir ***).get.toSet
+    runTransform(sources)
+    targetDir
+  }
+
+  private def transformFile(transform: String => String)(source: File, target: File): Unit = {
+    IO.reader(source) { reader =>
+      IO.writer(target, "", IO.defaultCharset) { writer =>
+        val pw = new PrintWriter(writer)
+        IO.foreachLine(reader) { line => pw.println(transform(line)) }
+      }
+    }
   }
 }
