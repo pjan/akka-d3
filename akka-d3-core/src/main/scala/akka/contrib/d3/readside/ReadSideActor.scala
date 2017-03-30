@@ -43,6 +43,7 @@ class ReadSideActor[Event <: AggregateEvent](
 
   override def preStart(): Unit = {
     coordinator ! ReadSideCoordinator.Register(processor.name, self)
+    if (settings.autoStart) coordinator ! ReadSideCoordinator.Start(processor.name)
   }
 
   override def postStop: Unit = {

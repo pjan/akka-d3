@@ -17,6 +17,7 @@ object ReadSideProcessorSettings {
 
     new ReadSideProcessorSettings(
       config = processorRSConfig,
+      autoStart = processorRSConfig.getBoolean("auto-start"),
       globalStartupTimeout = processorRSConfig.getDuration("global-startup-timeout", MILLISECONDS).millis,
       minBackoff = processorRSConfig.getDuration("backoff.min", MILLISECONDS).millis,
       maxBackoff = processorRSConfig.getDuration("backoff.max", MILLISECONDS).millis,
@@ -33,6 +34,7 @@ object ReadSideProcessorSettings {
 
 final case class ReadSideProcessorSettings(
   config:               Config,
+  autoStart:            Boolean,
   globalStartupTimeout: FiniteDuration,
   minBackoff:           FiniteDuration,
   maxBackoff:           FiniteDuration,
