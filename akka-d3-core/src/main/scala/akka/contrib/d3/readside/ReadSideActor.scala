@@ -40,6 +40,7 @@ class ReadSideActor[Event <: AggregateEvent](
   // Internal messaging
   case object Tick extends DeadLetterSuppression
   case class Start(offset: Offset)
+  case class Rewind(offset: Offset, requester: ActorRef)
 
   override def preStart(): Unit = {
     coordinator ! ReadSideCoordinator.Register(processor.name, self)
@@ -55,34 +56,37 @@ class ReadSideActor[Event <: AggregateEvent](
 
   private def stopped: Receive = {
     case EnsureActive(name) if name == processor.name ⇒
-      log.info("[{}] preparing.", name)
+      log.info("[{}] preparing for start.", name)
       implicit val timeout = Timeout(settings.globalStartupTimeout)
       val tag = processor.tag
 
       globalStartupTask.execute() pipeTo self
-      context.become(preparing(name, tag))
+      context.become(preparingForStart(name, tag))
 
     case EnsureStopped(name) ⇒
       log.debug("[{}] not running.", name)
 
     case AttemptRewind(name, offset) if name == processor.name ⇒
-      log.info("[{}] rewinding to offset {}.", name, offset)
-      val requester = sender()
-      processor.rewind(name, offset) pipeTo requester
-      ()
+      log.info("[{}] preparing for rewind to offset {}.", name, offset)
+      implicit val timeout = Timeout(settings.rewindTimeout)
+
+      globalStartupTask.execute() pipeTo self
+      context.become(preparingForRewind(name, offset, sender))
 
     case Tick ⇒
       coordinator ! ReadSideCoordinator.IsStopped(processor.name)
   }
 
-  private def preparing(name: String, tag: Tag): Receive = {
+  private def preparingForRewind(name: String, rewindOffset: Offset, requester: ActorRef): Receive = {
     case Done ⇒
-      log.info("[{}] prepared.", name)
-      processor.prepare(processor.name).map(Start) pipeTo self
+      log.info("[{}] prepared for rewind to offset {}", name, rewindOffset)
+      val handler = processor.buildHandler()
+      handler.prepare(processor.name).map { _ ⇒ Rewind(rewindOffset, requester) } pipeTo self
       unstashAll()
-      context.become(active(name, tag))
+      context.become(rewinding(name, handler))
 
     case Status.Failure(e) ⇒
+      unstashAll()
       throw e
 
     case Tick ⇒ // Do nothing while preparing
@@ -91,13 +95,44 @@ class ReadSideActor[Event <: AggregateEvent](
       stash()
   }
 
-  private def active(name: String, tag: Tag): Receive = {
+  private def rewinding(name: String, handler: ReadSideProcessor.Handler[Event]): Receive = {
+    case Rewind(offset, requester) ⇒
+      log.info("[{}] rewinding to offset {}", name, offset)
+      handler.rewind(name, offset) pipeTo requester
+      unstashAll()
+      context.become(stopped)
+
+    case Tick ⇒ // Do nothing while rewinding
+
+    case _ ⇒
+      stash()
+  }
+
+  private def preparingForStart(name: String, tag: Tag): Receive = {
+    case Done ⇒
+      log.info("[{}] prepared for start.", name)
+      val handler = processor.buildHandler()
+      handler.prepare(processor.name).map(Start) pipeTo self
+      unstashAll()
+      context.become(active(name, tag, handler))
+
+    case Status.Failure(e) ⇒
+      unstashAll()
+      throw e
+
+    case Tick ⇒ // Do nothing while preparing
+
+    case _ ⇒
+      stash()
+  }
+
+  private def active(name: String, tag: Tag, handler: ReadSideProcessor.Handler[Event]): Receive = {
     case Start(offset) ⇒
       log.info("[{}] starting.", name)
       val (killSwitch, streamDone) =
         processor.eventStreamFactory(tag, offset)
           .viaMat(KillSwitches.single)(Keep.right)
-          .via(processor.handle())
+          .via(handler.flow())
           .toMat(Sink.ignore)(Keep.both)
           .run()
 

@@ -201,7 +201,7 @@ lazy val micrositesSettings = Seq(
   micrositeDocumentationUrl := "/akka-d3/docs/",
   micrositeGithubOwner := "pjan",
   micrositeGithubRepo := "akka-d3",
-  micrositeHighlightTheme := "color-brewer",
+  micrositeHighlightTheme := "solarized-dark",
   includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.md"
 )
 
@@ -268,8 +268,8 @@ lazy val root = Project(
   .settings(moduleName := "root")
   .settings(d3Settings)
   .settings(noPublishSettings)
-  .aggregate(d3, queryCassandra, queryInmemory)
-  .dependsOn(d3, queryCassandra, queryInmemory)
+  .aggregate(d3, queryCassandra, queryInmemory, readsideCassandra)
+  .dependsOn(d3, queryCassandra, queryInmemory, readsideCassandra)
 
 lazy val d3 = project.in(file(".d3"))
   .settings(moduleName := "akka-d3")
@@ -286,6 +286,7 @@ lazy val docs = Project(
   .settings(d3Settings)
   .settings(micrositesSettings)
   .settings(buildInfoSettings)
+  .dependsOn(root)
   .enablePlugins(MicrositesPlugin)
   .enablePlugins(BuildInfoPlugin)
 

@@ -64,10 +64,46 @@ object Domain extends ExtensionId[Domain]
 
 abstract class Domain
     extends Extension {
+  final def register[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E
+  )(
+    implicit
+    ect: ClassTag[E]
+  ): Domain =
+    register[E](entityFactory, None, None)
+
+  final def register[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E,
+    name:          String
+  )(
+    implicit
+    ect: ClassTag[E]
+  ): Domain =
+    register[E](entityFactory, Some(name), None)
+
+  final def register[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E,
+    settings:      AggregateSettings
+  )(
+    implicit
+    ect: ClassTag[E]
+  ): Domain =
+    register[E](entityFactory, None, Some(settings))
+
+  final def register[E <: AggregateEntity](
+    entityFactory: E#Id ⇒ E,
+    name:          String,
+    settings:      AggregateSettings
+  )(
+    implicit
+    ect: ClassTag[E]
+  ): Domain =
+    register[E](entityFactory, Some(name), Some(settings))
+
   def register[E <: AggregateEntity](
     entityFactory: E#Id ⇒ E,
-    name:          Option[String]            = None,
-    settings:      Option[AggregateSettings] = None
+    name:          Option[String],
+    settings:      Option[AggregateSettings]
   )(
     implicit
     ect: ClassTag[E]
@@ -81,11 +117,39 @@ abstract class Domain
     ect: ClassTag[E]
   ): AggregateRef[E]
 
+  final def eventStream[E <: AggregateEvent](
+    tag:        Tag,
+    fromOffset: Offset
+  ): Source[EventStreamElement[E], NotUsed] =
+    eventStream[E](tag, fromOffset, None, None)
+
+  final def eventStream[E <: AggregateEvent](
+    tag:        Tag,
+    fromOffset: Offset,
+    name:       String
+  ): Source[EventStreamElement[E], NotUsed] =
+    eventStream[E](tag, fromOffset, Some(name), None)
+
+  final def eventStream[E <: AggregateEvent](
+    tag:        Tag,
+    fromOffset: Offset,
+    settings:   EventStreamSettings
+  ): Source[EventStreamElement[E], NotUsed] =
+    eventStream[E](tag, fromOffset, None, Some(settings))
+
+  final def eventStream[E <: AggregateEvent](
+    tag:        Tag,
+    fromOffset: Offset,
+    name:       String,
+    settings:   EventStreamSettings
+  ): Source[EventStreamElement[E], NotUsed] =
+    eventStream[E](tag, fromOffset, Some(name), Some(settings))
+
   def eventStream[E <: AggregateEvent](
     tag:        Tag,
     fromOffset: Offset,
-    name:       Option[String]              = None,
-    settings:   Option[EventStreamSettings] = None
+    name:       Option[String],
+    settings:   Option[EventStreamSettings]
   ): Source[EventStreamElement[E], NotUsed]
 
 }

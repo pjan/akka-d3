@@ -73,9 +73,22 @@ object ReadSide extends ExtensionId[ReadSide]
 abstract class ReadSide
     extends Extension {
 
+  private[d3] def system: ActorSystem
+
+  final def register[Event <: AggregateEvent](
+    processor: ReadSideProcessor[Event]
+  ): Unit =
+    register[Event](processor, None)
+
+  final def register[Event <: AggregateEvent](
+    processor: ReadSideProcessor[Event],
+    settings:  ReadSideProcessorSettings
+  ): Unit =
+    register[Event](processor, Some(settings))
+
   def register[Event <: AggregateEvent](
     processor: ReadSideProcessor[Event],
-    settings:  Option[ReadSideProcessorSettings] = None
+    settings:  Option[ReadSideProcessorSettings]
   ): Unit
 
   def start(
@@ -121,7 +134,7 @@ class ReadSideImpl(
 
     val startupTask = StartupTasks(system).create(
       name = s"GlobalStartup-${processor.encodedName}",
-      task = () ⇒ processor.globalPrepare(),
+      task = () ⇒ processor.buildHandler().globalPrepare(),
       timeout = readSideProcessorSettings.globalStartupTimeout,
       minBackoff = 1.second,
       maxBackoff = 5.seconds,
