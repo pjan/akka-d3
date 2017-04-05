@@ -1,0 +1,19 @@
+@media (min-width: 768px) {
+  #page-content-wrapper section {
+    max-width: 70px; } }
+@media (min-width: 992px) {
+  #page-content-wrapper section {
+    max-width: 800px; } }
+@media (min-width: 1200px) {
+  #page-content-wrapper section {
+    max-width: 800px; } }
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 700px; } }
+@media (min-width: 992px) {
+  .container {
+    max-width: 800px; } }
+@media (min-width: 1200px) {
+  .container {
+    max-width: 800px; } }

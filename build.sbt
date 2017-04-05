@@ -196,17 +196,24 @@ lazy val wartRemoverSettings = Seq(
 
 lazy val micrositesSettings = Seq(
   micrositeName := "akka-d3",
-  micrositeDescription := "A library for Domain Driven Design, with Event Sourcing & CQRS, on top of Akka",
+  micrositeDescription := "Library for Domain Driven Design, embracing Event Sourcing and CQRS, on top of Akka",
   micrositeBaseUrl := "akka-d3",
   micrositeDocumentationUrl := "/akka-d3/docs/",
   micrositeGithubOwner := "pjan",
   micrositeGithubRepo := "akka-d3",
+  micrositeAuthor := "pjan",
   micrositeHighlightTheme := "solarized-dark",
   includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.md"
 )
 
 lazy val buildInfoSettings = Seq(
-  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+  buildInfoKeys := Seq[BuildInfoKey](
+    name,
+    version,
+    scalaVersion,
+    sbtVersion,
+    "lastTag" -> git.gitDescribedVersion.value.get.takeWhile(_ != '-')
+  ),
   buildInfoPackage := "akka.contrib.d3"
 )
 
