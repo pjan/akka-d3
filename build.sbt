@@ -62,6 +62,7 @@ lazy val credentialSettings = Seq(
 )
 
 lazy val sharedPublishSettings = Seq(
+  useGpg := true,
   releaseCrossBuild := true,
   releaseTagName := tagName.value,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
