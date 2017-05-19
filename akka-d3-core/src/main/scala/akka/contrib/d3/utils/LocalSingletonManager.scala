@@ -15,7 +15,7 @@ private[d3] final class LocalSingletonManagerSettings(
 
   def withSingletonName(name: String): LocalSingletonManagerSettings = copy(singletonName = name)
 
-  private def copy(
+  def copy(
     singletonName: String = singletonName
   ): LocalSingletonManagerSettings =
     new LocalSingletonManagerSettings(singletonName)

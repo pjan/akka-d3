@@ -31,7 +31,7 @@ private[d3] class AggregateActor[E <: AggregateEntity](
   private type Aggregate = entity.Aggregate
   private type Command = entity.Command
   private type Event = entity.Event
-  private type State = entity.State
+  // private type State = entity.State
 
   private val system = context.system
   implicit private val dispatcher = system.dispatchers.lookup(settings.dispatcher)

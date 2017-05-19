@@ -41,8 +41,6 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     ser
   }
 
-  private val emptyByteArray = Array.empty[Byte]
-
   private val fromBinaryMap = collection.immutable.HashMap[String, Array[Byte] ⇒ AnyRef](
     AAGetStateManifest → aaGetStateFromBinary,
     AAPassivateManifest → aaPassivateFromBinary,

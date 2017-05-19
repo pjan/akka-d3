@@ -24,7 +24,7 @@ private[d3] final class AggregateManager[E <: AggregateEntity](
 
   private type Aggregate = E
   private type Command = E#Command
-  private type Event = E#Event
+  // private type Event = E#Event
   private type Id = E#Id
 
   private var idByRef = Map.empty[ActorRef, Id]

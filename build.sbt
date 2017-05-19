@@ -23,8 +23,8 @@ lazy val tagName = Def.setting{
 
 lazy val buildSettings = Seq(
   organization := "io.pjan",
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.11.8", "2.12.1")
+  scalaVersion := "2.12.2",
+  crossScalaVersions := Seq("2.11.8", "2.12.2")
 )
 
 lazy val noPublishSettings = Seq(
@@ -227,15 +227,15 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.4.17"
-    val akkaPersistenceCassandra = "0.23"
-    val akkaPersistenceInMemory  = "2.4.17.3"
+    val akka                     = "2.5.1"
+    val akkaPersistenceCassandra = "0.53"
+    val akkaPersistenceInMemory  = "2.5.1.0"
     val machinist                = "0.6.1"
     val simulacrum               = "0.10.0"
 
     // Test
     val scalaCheck               = "1.13.4"
-    val scalaTest                = "3.0.1"
+    val scalaTest                = "3.0.3"
 
     // Compiler
     val kindProjector            = "0.9.3"
@@ -248,7 +248,7 @@ lazy val D = new {
   val akkaPersistence          = "com.typesafe.akka"              %%  "akka-persistence"                     % Versions.akka
   val akkaPersistenceCassandra = "com.typesafe.akka"              %%  "akka-persistence-cassandra"           % Versions.akkaPersistenceCassandra
   val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
-  val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query-experimental"  % Versions.akka
+  val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query"               % Versions.akka
   val akkaStream               = "com.typesafe.akka"              %%  "akka-stream"                          % Versions.akka
   val machinist                = "org.typelevel"                  %%  "machinist"                            % Versions.machinist
   val simulacrum               = "com.github.mpilquist"           %%  "simulacrum"                           % Versions.simulacrum
@@ -389,4 +389,4 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 addCommandAlias("build", ";clean;scalariformFormat;scalastyle;protobufGenerate;test")
 
-addCommandAlias("validate", ";clean;scalastyle;protobufGenerate;test")
+addCommandAlias("validate", ";clean;scalastyle;protobufGenerate;test;docs/makeMicrosite")
