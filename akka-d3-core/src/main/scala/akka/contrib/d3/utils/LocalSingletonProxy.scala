@@ -111,7 +111,7 @@ private[d3] final class LocalSingletonProxy(
         case Some(s) ⇒
           if (log.isDebugEnabled)
             log.debug(
-              "Forwarding message of type [{}] to current singleton instance at [{}]: {}",
+              "Forwarding message of type [{}] to current singleton instance at [{}]",
               Logging.simpleName(msg.getClass.getName), s.path
             )
           s forward msg
