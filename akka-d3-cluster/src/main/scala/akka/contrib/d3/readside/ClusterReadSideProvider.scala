@@ -27,7 +27,11 @@ private[d3] final class ClusterReadSideProvider(
       strategy = SupervisorStrategy.stoppingStrategy
     )
 
-    val singletonProps = ClusterSingletonManager.props(backoffProps, PoisonPill, ClusterSingletonManagerSettings(system))
+    val singletonProps = ClusterSingletonManager.props(
+      singletonProps = backoffProps,
+      terminationMessage = PoisonPill,
+      settings = ClusterSingletonManagerSettings(system)
+    )
 
     val singleton = system.actorOf(singletonProps, "readside-coordinator")
 
@@ -63,13 +67,17 @@ private[d3] final class ClusterReadSideProvider(
     val sharding = ClusterSharding(system)
 
     if (role.exists(Cluster(system).getSelfRoles.contains)) {
-      sharding.start(
+      val shardRegion = sharding.start(
         name,
         actorProps,
         clusterShardingSettings,
         extractEntityId,
         extractShardId
       )
+
+      shardRegion ! ReadSideActor.WakeUp(name)
+
+      shardRegion
     } else {
       sharding.startProxy(
         name,

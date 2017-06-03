@@ -17,6 +17,7 @@ private[d3] object D3MessageSerializer {
   final val AMRequestPassivationManifest = "D3AMR"
   final val ASInitializedManifest = "D3ASI"
   final val ASUninitializedManifest = "D3ASU"
+  final val RAWakeUpManifest = "DRRAWU"
   final val RAEnsureActiveManifest = "D3RAEA"
   final val RAEnsureStoppedManifest = "D3RAES"
   final val RAAttemptRewindManifest = "D3RAAR"
@@ -49,6 +50,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     AMRequestPassivationManifest → amRequestPassivationFromBinary,
     ASInitializedManifest → asInitializedFromBinary,
     ASUninitializedManifest → asUninitializedFromBinary,
+    RAWakeUpManifest → raWakeUpFromBinary,
     RAEnsureActiveManifest → raEnsureActiveFromBinary,
     RAEnsureStoppedManifest → raEnsureStoppedFromBinary,
     RAAttemptRewindManifest → raAttemptRewindFromBinary,
@@ -68,6 +70,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     case _: AggregateManager.RequestPassivation ⇒ AMRequestPassivationManifest
     case _: AggregateState.Initialized[_]       ⇒ ASInitializedManifest
     case _: AggregateState.Uninitialized[_]     ⇒ ASUninitializedManifest
+    case _: ReadSideActor.WakeUp                ⇒ RAWakeUpManifest
     case _: ReadSideActor.EnsureActive          ⇒ RAEnsureActiveManifest
     case _: ReadSideActor.EnsureStopped         ⇒ RAEnsureStoppedManifest
     case _: ReadSideActor.AttemptRewind         ⇒ RAAttemptRewindManifest
@@ -89,6 +92,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     case m: AggregateManager.RequestPassivation ⇒ amRequestPassivationToProto(m).toByteArray
     case m: AggregateState.Initialized[_]       ⇒ asInitializedToProto(m).toByteArray
     case m: AggregateState.Uninitialized[_]     ⇒ asUninitializedToProto(m).toByteArray
+    case m: ReadSideActor.WakeUp                ⇒ raWakeUpToProto(m).toByteArray
     case m: ReadSideActor.EnsureActive          ⇒ raEnsureActiveToProto(m).toByteArray
     case m: ReadSideActor.EnsureStopped         ⇒ raEnsureStoppedToProto(m).toByteArray
     case m: ReadSideActor.AttemptRewind         ⇒ raAttemptRewindToProto(m).toByteArray
@@ -331,6 +335,20 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
       idManifest
     ).get
     AggregateState.Uninitialized(id.asInstanceOf[AggregateLike#Id])
+  }
+
+  // ReadSideActor#WakeUp
+  private def raWakeUpToProto(wakeUp: ReadSideActor.WakeUp): pm.RAWakeUp = {
+    pm.RAWakeUp.newBuilder()
+      .setName(wakeUp.name)
+      .build()
+  }
+
+  private def raWakeUpFromBinary(bytes: Array[Byte]): ReadSideActor.WakeUp =
+    raWakeUpFromProto(pm.RAWakeUp.parseFrom(bytes))
+
+  private def raWakeUpFromProto(wakeUp: pm.RAWakeUp): ReadSideActor.WakeUp = {
+    ReadSideActor.WakeUp(wakeUp.getName)
   }
 
   // ReadSideActor#EnsureActive

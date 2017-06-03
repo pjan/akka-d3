@@ -46,7 +46,7 @@ object ReadSide extends ExtensionId[ReadSide]
     val rsProviderClass: String =
       Try(getString("akka.contrib.d3.readside.provider")).toOption.getOrElse(topology) match {
         case "local"   ⇒ classOf[LocalReadSideProvider].getName
-        case "cluster" ⇒ "akka.contrib.d3.readside.ClusterAggregateManagerProvider"
+        case "cluster" ⇒ "akka.contrib.d3.readside.ClusterReadSideProvider"
         case fqcn      ⇒ fqcn
       }
 
@@ -143,7 +143,7 @@ class ReadSideImpl(
 
     readSideProvider.startReadSideActor(
       name = processor.name,
-      actorProps = Props(new ReadSideActor(processor, readSideProcessorSettings, 4 / 5 * settings.coordinatorHeartBeatInterval, startupTask, coordinator)),
+      actorProps = Props(new ReadSideActor(processor, readSideProcessorSettings, settings.coordinatorHeartBeatInterval * 4 / 5, startupTask, coordinator)),
       settings = readSideProcessorSettings
     )
     ()
