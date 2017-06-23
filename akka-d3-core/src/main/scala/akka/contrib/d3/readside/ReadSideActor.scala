@@ -17,6 +17,7 @@ object ReadSideActor {
   @SerialVersionUID(1L) final case class EnsureActive(name: String) extends Message
   @SerialVersionUID(1L) final case class EnsureStopped(name: String) extends Message
   @SerialVersionUID(1L) final case class AttemptRewind(name: String, offset: Offset) extends Message
+  @SerialVersionUID(1L) final case class GetStatus(name: String) extends Message
 }
 
 class ReadSideActor[Event <: AggregateEvent](
@@ -35,6 +36,8 @@ class ReadSideActor[Event <: AggregateEvent](
   implicit private val dispatcher = system.dispatchers.lookup(settings.dispatcher)
 
   private var shutdown: Option[KillSwitch] = None
+
+  private var currentOffset: Offset = Offset.noOffset
 
   private val tick = context.system.scheduler.schedule(0.seconds, heartbeatInterval, self, Tick)
 
@@ -75,6 +78,9 @@ class ReadSideActor[Event <: AggregateEvent](
         globalStartupTask.execute() pipeTo self
         context.become(preparingForRewind(name, offset, sender))
 
+      case GetStatus(name) if name == processor.name ⇒
+        sender ! ReadSideStatus.Stopped(name)
+
       case Tick ⇒
         coordinator ! ReadSideCoordinator.IsStopped(processor.name)
     }
@@ -108,7 +114,7 @@ class ReadSideActor[Event <: AggregateEvent](
     val rewindingReceive: Receive = {
       case Rewind(offset, requester) ⇒
         log.info("[{}] rewinding to offset {}", name, offset)
-        handler.rewind(name, offset) pipeTo requester
+        handler.rewind(name, offset).map { result ⇒ currentOffset = offset; result } pipeTo requester
         unstashAll()
         context.become(stopped)
 
@@ -150,6 +156,10 @@ class ReadSideActor[Event <: AggregateEvent](
         val (killSwitch, streamDone) =
           processor.eventStreamFactory(tag, offset)
             .viaMat(KillSwitches.single)(Keep.right)
+            .map { element ⇒
+              currentOffset = element.offset
+              element
+            }
             .via(handler.flow())
             .toMat(Sink.ignore)(Keep.both)
             .run()
@@ -167,6 +177,9 @@ class ReadSideActor[Event <: AggregateEvent](
 
       case AttemptRewind(n, _) if n == processor.name ⇒
         sender ! Status.Failure(new IllegalStateException(s"Can't rewind when active."))
+
+      case GetStatus(n) if n == processor.name ⇒
+        sender ! ReadSideStatus.Active(n, currentOffset)
 
       case Tick ⇒
         coordinator ! ReadSideCoordinator.IsActive(processor.name)

@@ -147,6 +147,9 @@ abstract class CassandraReadSide extends ReadSide {
   override def rewind(name: String, offset: Offset): Future[Done] =
     readSide.rewind(name, offset)
 
+  override def status(name: String): Future[ReadSideStatus] =
+    readSide.status(name)
+
   def builder[Event <: AggregateEvent](name: String, tag: Tag): ReadSideHandlerBuilder[Event]
 }
 

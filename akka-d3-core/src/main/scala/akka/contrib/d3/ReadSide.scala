@@ -53,6 +53,9 @@ object ReadSide extends ExtensionId[ReadSide]
     val rewindTimeout: FiniteDuration =
       getDuration("akka.contrib.d3.readside.rewind-timeout", MILLISECONDS).millis
 
+    val statusTimeout: FiniteDuration =
+      getDuration("akka.contrib.d3.readside.status-timeout", MILLISECONDS).millis
+
     val coordinatorHeartBeatInterval: FiniteDuration =
       getDuration("akka.contrib.d3.readside.coordinator.heartbeat-interval", MILLISECONDS).millis
 
@@ -103,6 +106,10 @@ abstract class ReadSide
     name:   String,
     offset: Offset
   ): Future[Done]
+
+  def status(
+    name: String
+  ): Future[ReadSideStatus]
 
 }
 
@@ -167,6 +174,13 @@ class ReadSideImpl(
   ): Future[Done] = {
     implicit val timeout = Timeout(settings.rewindTimeout)
     (coordinator ? ReadSideCoordinator.Rewind(name, offset)).mapTo[Done]
+  }
+
+  override def status(
+    name: String
+  ): Future[ReadSideStatus] = {
+    implicit val timeout = Timeout(settings.statusTimeout)
+    (coordinator ? ReadSideCoordinator.GetStatus(name)).mapTo[ReadSideStatus]
   }
 
   import settings._
