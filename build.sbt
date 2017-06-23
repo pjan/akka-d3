@@ -227,19 +227,19 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.5.1"
-    val akkaPersistenceCassandra = "0.53"
-    val akkaPersistenceInMemory  = "2.5.1.0"
+    val akka                     = "2.5.3"
+    val akkaPersistenceCassandra = "0.54"
+    val akkaPersistenceInMemory  = "2.5.1.1"
     val machinist                = "0.6.1"
-    val simulacrum               = "0.10.0"
+    val simulacrum               = "0.11.0"
 
     // Test
     val scalaCheck               = "1.13.4"
     val scalaTest                = "3.0.3"
 
     // Compiler
-    val kindProjector            = "0.9.3"
-    val macroParadise            = "2.1.0"
+    val kindProjector            = "0.9.4"
+    val macroParadise            = "2.1.1"
   }
 
   val akkaActor                = "com.typesafe.akka"              %%  "akka-actor"                           % Versions.akka
