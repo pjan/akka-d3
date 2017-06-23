@@ -96,6 +96,21 @@ message RCStop {
   required string name = 1;
 }
 
+message RCGetStatus {
+  required string name = 1;
+}
+
+message RSStopped {
+  required string name = 1;
+}
+
+message RSActive {
+  required string name = 1;
+  required bytes offset = 2;
+  required int32 offsetSerializerId = 3;
+  optional bytes offsetManifest = 4;
+}
+
 message AggregateSettings {
   required string config = 1;
 }

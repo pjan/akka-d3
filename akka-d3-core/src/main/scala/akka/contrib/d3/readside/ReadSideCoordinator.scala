@@ -12,6 +12,7 @@ private[d3] object ReadSideCoordinator {
   @SerialVersionUID(1L) final case class Rewind(name: String, offset: Offset)
   @SerialVersionUID(1L) final case class IsActive(name: String)
   @SerialVersionUID(1L) final case class IsStopped(name: String)
+  @SerialVersionUID(1L) final case class GetStatus(name: String)
 
   case class ReadSideProcessorState(status: ReadSideProcessorState.Status, delta: List[ReadSideProcessorState.Status] = List.empty) {
     def registerDelta(status: ReadSideProcessorState.Status): ReadSideProcessorState = {
@@ -103,6 +104,10 @@ private[d3] final class ReadSideCoordinator(
 
     case IsStopped(name) ⇒
       registerActorStatus(name, sender, ReadSideProcessorState.Status.Stopped)
+
+    case GetStatus(name) ⇒
+      log.debug(s"Get status for {}", name)
+      refByName.get(name).foreach { _ forward ReadSideActor.GetStatus(name) }
 
   }
 

@@ -27,6 +27,9 @@ private[d3] object D3MessageSerializer {
   final val RCRewindManifest = "D3RCR"
   final val RCStartManifest = "D3RCSTART"
   final val RCStopManifest = "D3RCSTOP"
+  final val RCGetStatusManifest = "D3RCGS"
+  final val RSStoppedManifest = "D3RSS"
+  final val RSActiveManifest = "D3RSA"
 }
 
 private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
@@ -59,7 +62,10 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     RCRegisterManifest → rcRegisterFromBinary,
     RCRewindManifest → rcRewindFromBinary,
     RCStartManifest → rcStartFromBinary,
-    RCStopManifest → rcStopFromBinary
+    RCStopManifest → rcStopFromBinary,
+    RCGetStatusManifest → rcGetStatusFromBinary,
+    RSActiveManifest → rsActiveFromBinary,
+    RSStoppedManifest → rsStoppedFromBinary
   )
 
   override def manifest(obj: AnyRef): String = obj match {
@@ -80,6 +86,9 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     case _: ReadSideCoordinator.Rewind          ⇒ RCRewindManifest
     case _: ReadSideCoordinator.Start           ⇒ RCStartManifest
     case _: ReadSideCoordinator.Stop            ⇒ RCStopManifest
+    case _: ReadSideCoordinator.GetStatus       ⇒ RCGetStatusManifest
+    case _: ReadSideStatus.Stopped              ⇒ RSStoppedManifest
+    case _: ReadSideStatus.Active               ⇒ RSActiveManifest
     case _ ⇒
       throw new IllegalArgumentException(s"Can't serialize object of type ${obj.getClass} in [${getClass.getName}]")
   }
@@ -102,6 +111,9 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     case m: ReadSideCoordinator.Rewind          ⇒ rcRewindToProto(m).toByteArray
     case m: ReadSideCoordinator.Start           ⇒ rcStartToProto(m).toByteArray
     case m: ReadSideCoordinator.Stop            ⇒ rcStopToProto(m).toByteArray
+    case m: ReadSideCoordinator.GetStatus       ⇒ rcGetStatusToProto(m).toByteArray
+    case m: ReadSideStatus.Stopped              ⇒ rsStoppedToProto(m).toByteArray
+    case m: ReadSideStatus.Active               ⇒ rsActiveToProto(m).toByteArray
     case _ ⇒
       throw new IllegalArgumentException(s"Can't serialize object of type ${obj.getClass} in [${getClass.getName}]")
   }
@@ -531,6 +543,72 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def rcStopFromProto(stop: pm.RCStop): ReadSideCoordinator.Stop = {
     ReadSideCoordinator.Stop(stop.getName)
+  }
+
+  // ReadSideCoordinator#GetStatus
+
+  private def rcGetStatusToProto(getStatus: ReadSideCoordinator.GetStatus): pm.RCGetStatus = {
+    pm.RCGetStatus.newBuilder()
+      .setName(getStatus.name)
+      .build()
+  }
+
+  private def rcGetStatusFromBinary(bytes: Array[Byte]): ReadSideCoordinator.GetStatus =
+    rcGetStatusFromProto(pm.RCGetStatus.parseFrom(bytes))
+
+  private def rcGetStatusFromProto(getStatus: pm.RCGetStatus): ReadSideCoordinator.GetStatus = {
+    ReadSideCoordinator.GetStatus(getStatus.getName)
+  }
+
+  // ReadSideStatus#Stopped
+
+  private def rsStoppedToProto(stopped: ReadSideStatus.Stopped): pm.RSStopped = {
+    pm.RSStopped.newBuilder()
+      .setName(stopped.name)
+      .build()
+  }
+
+  private def rsStoppedFromBinary(bytes: Array[Byte]): ReadSideStatus.Stopped =
+    rsStoppedFromProto(pm.RSStopped.parseFrom(bytes))
+
+  private def rsStoppedFromProto(stopped: pm.RSStopped): ReadSideStatus.Stopped = {
+    ReadSideStatus.Stopped(stopped.getName)
+  }
+
+  // ReadSideStatus#Active
+
+  private def rsActiveToProto(active: ReadSideStatus.Active): pm.RSActive = {
+    val offset = active.offset.asInstanceOf[AnyRef]
+    val offsetSerializer = serialization.findSerializerFor(offset)
+    val builder = pm.RSActive.newBuilder()
+      .setName(active.name)
+      .setOffset(ByteString.copyFrom(offsetSerializer.toBinary(offset)))
+      .setOffsetSerializerId(offsetSerializer.identifier)
+
+    offsetSerializer match {
+      case ser2: SerializerWithStringManifest ⇒
+        val manifest = ser2.manifest(offset)
+        if (manifest != "")
+          builder.setOffsetManifest(ByteString.copyFromUtf8(manifest))
+      case _ ⇒
+        if (offsetSerializer.includeManifest)
+          builder.setOffsetManifest(ByteString.copyFromUtf8(offset.getClass.getName))
+    }
+
+    builder.build()
+  }
+
+  private def rsActiveFromBinary(bytes: Array[Byte]): ReadSideStatus.Active =
+    rsActiveFromProto(pm.RSActive.parseFrom(bytes))
+
+  private def rsActiveFromProto(active: pm.RSActive): ReadSideStatus.Active = {
+    val offsetManifest = if (active.hasOffsetManifest) active.getOffsetManifest.toStringUtf8 else ""
+    val offset = ser.deserialize(
+      active.getOffset.toByteArray,
+      active.getOffsetSerializerId,
+      offsetManifest
+    ).get
+    ReadSideStatus.Active(active.getName, offset.asInstanceOf[Offset])
   }
 
 }
