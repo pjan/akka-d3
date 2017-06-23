@@ -239,7 +239,7 @@ lazy val D = new {
 
     // Compiler
     val kindProjector            = "0.9.4"
-    val macroParadise            = "2.1.1"
+    val macroParadise            = "2.1.0"
   }
 
   val akkaActor                = "com.typesafe.akka"              %%  "akka-actor"                           % Versions.akka
