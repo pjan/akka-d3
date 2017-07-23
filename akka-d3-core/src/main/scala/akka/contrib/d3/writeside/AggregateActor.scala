@@ -161,6 +161,8 @@ private[d3] class AggregateActor[E <: AggregateEntity](
         onEventPersisted(evt)
         requester ! Right(events)
       }
+    } else {
+      requester ! Right(events)
     }
     changeState(Available)
   }
