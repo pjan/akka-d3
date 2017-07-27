@@ -1,11 +1,12 @@
 package akka.contrib.d3.readside
 
 import akka.actor.{ActorSystem, ExtendedActorSystem}
+import akka.contrib.d3.utils.cassandra.{CassandraSink, CassandraSource}
 import akka.dispatch.Dispatchers
 import akka.event.Logging
 import akka.persistence.cassandra.{CassandraPluginConfig, SessionProvider}
 import akka.persistence.cassandra.session.CassandraSessionSettings
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Sink, Source}
 import akka.{Done, NotUsed}
 import com.datastax.driver.core._
 
@@ -123,6 +124,23 @@ final class CassandraSession private[d3] (
 
   def executeWrite(stmt: Statement): Future[Done] =
     delegate.executeWrite(stmt)
+
+  def source(stmt: Statement)(implicit ec: ExecutionContext): Future[Source[Row, NotUsed]] = for {
+    session ← delegate.underlying()
+    source = CassandraSource.fromStatement(stmt)(session)
+  } yield source
+
+  def sink[T](
+    parallelism:     Int,
+    statement:       PreparedStatement,
+    statementBinder: (T, PreparedStatement) ⇒ BoundStatement
+  )(
+    implicit
+    ec: ExecutionContext
+  ): Future[Sink[T, Future[Done]]] = for {
+    session ← delegate.underlying()
+    sink = CassandraSink(parallelism, statement, statementBinder)(session)
+  } yield sink
 
   @varargs
   def executeWrite(stmt: String, bindValues: AnyRef*): Future[Done] =
