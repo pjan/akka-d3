@@ -374,6 +374,8 @@ lazy val readsideCassandra = Project(
   .settings(
     libraryDependencies ++= Seq(
       D.akkaPersistenceCassandra,
+      // fix for SI-8978
+      "com.google.code.findbugs" % "jsr305" % "2.0.3",
       compilerPlugin(D.kindProjector)
     )
   )
