@@ -23,8 +23,8 @@ lazy val tagName = Def.setting{
 
 lazy val buildSettings = Seq(
   organization := "io.pjan",
-  scalaVersion := "2.12.2",
-  crossScalaVersions := Seq("2.11.8", "2.12.2")
+  scalaVersion := "2.12.3",
+  crossScalaVersions := Seq("2.11.11", "2.12.3")
 )
 
 lazy val noPublishSettings = Seq(
@@ -113,7 +113,7 @@ lazy val commonSettings = Seq(
 lazy val formatSettings = SbtScalariform.scalariformSettings ++ Seq(
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(RewriteArrowSymbols, true)
-      .setPreference(DoubleIndentClassDeclaration, true)
+      .setPreference(DoubleIndentConstructorArguments, true)
       .setPreference(PreserveSpaceBeforeArguments, true)
       .setPreference(AlignParameters, true)
       .setPreference(AlignSingleLineCaseStatements, true)
@@ -227,7 +227,7 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.5.3"
+    val akka                     = "2.5.4"
     val akkaPersistenceCassandra = "0.54"
     val akkaPersistenceInMemory  = "2.5.1.1"
     val machinist                = "0.6.1"
@@ -239,7 +239,7 @@ lazy val D = new {
 
     // Compiler
     val kindProjector            = "0.9.4"
-    val macroParadise            = "2.1.0"
+    val macroParadise            = "2.1.1"
   }
 
   val akkaActor                = "com.typesafe.akka"              %%  "akka-actor"                           % Versions.akka
@@ -375,7 +375,7 @@ lazy val readsideCassandra = Project(
     libraryDependencies ++= Seq(
       D.akkaPersistenceCassandra,
       // fix for SI-8978
-      "com.google.code.findbugs" % "jsr305" % "2.0.3",
+      "com.google.code.findbugs" % "jsr305" % "3.0.2",
       compilerPlugin(D.kindProjector)
     )
   )
