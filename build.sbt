@@ -98,8 +98,8 @@ lazy val commonSettings = Seq(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalacOptions ++= commonScalacOptions,
   libraryDependencies ++= Seq(
-//    D.simulacrum,
-//    D.machinist,
+    D.simulacrum,
+    D.machinist,
     compilerPlugin(D.macroParadise),
     compilerPlugin(D.kindProjector)
   ),
