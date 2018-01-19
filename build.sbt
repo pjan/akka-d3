@@ -23,8 +23,8 @@ lazy val tagName = Def.setting{
 
 lazy val buildSettings = Seq(
   organization := "io.pjan",
-  scalaVersion := "2.12.3",
-  crossScalaVersions := Seq("2.11.8", "2.12.2")
+  scalaVersion := "2.12.4",
+  crossScalaVersions := Seq("2.11.12", "2.12.4")
 )
 
 lazy val noPublishSettings = Seq(
