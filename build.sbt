@@ -305,8 +305,7 @@ lazy val core = Project(
       D.akkaPersistenceQuery,
   	  D.akkaTest % "test",
   	  D.scalaTest % "test",
-      D.akkaPersistenceInMemory % "test",
-      compilerPlugin(D.kindProjector)
+      D.akkaPersistenceInMemory % "test"
   	)
   )
   .settings(d3Settings)
@@ -323,8 +322,7 @@ lazy val cluster = Project(
       D.akkaClusterSharding,
       D.akkaTest % "test",
       D.scalaTest % "test",
-      D.akkaPersistenceInMemory % "test",
-      compilerPlugin(D.kindProjector)
+      D.akkaPersistenceInMemory % "test"
     )
   )
   .dependsOn(core)
@@ -338,8 +336,7 @@ lazy val queryInmemory = Project(
   .settings(moduleName := "akka-d3-query-inmemory")
   .settings(
     libraryDependencies ++= Seq(
-      D.akkaPersistenceInMemory,
-      compilerPlugin(D.kindProjector)
+      D.akkaPersistenceInMemory
     )
   )
   .dependsOn(core)
@@ -353,8 +350,7 @@ lazy val queryCassandra = Project(
   .settings(moduleName := "akka-d3-query-cassandra")
   .settings(
     libraryDependencies ++= Seq(
-      D.akkaPersistenceCassandra,
-      compilerPlugin(D.kindProjector)
+      D.akkaPersistenceCassandra
     )
   )
   .dependsOn(core)
@@ -370,8 +366,7 @@ lazy val readsideCassandra = Project(
     libraryDependencies ++= Seq(
       D.akkaPersistenceCassandra,
       // fix for SI-8978
-      "com.google.code.findbugs" % "jsr305" % "2.0.3",
-      compilerPlugin(D.kindProjector)
+      "com.google.code.findbugs" % "jsr305" % "3.0.2"
     )
   )
   .dependsOn(core, queryCassandra)
