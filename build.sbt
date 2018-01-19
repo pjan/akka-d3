@@ -227,36 +227,31 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.5.4"
-    val akkaPersistenceCassandra = "0.55"
+    val akka                     = "2.5.9"
+    val akkaPersistenceCassandra = "0.80"
     val akkaPersistenceInMemory  = "2.5.1.1"
-    val machinist                = "0.6.1"
+    val machinist                = "0.6.3"
     val simulacrum               = "0.11.0"
 
     // Test
-    val scalaCheck               = "1.13.4"
     val scalaTest                = "3.0.4"
 
     // Compiler
-    val kindProjector            = "0.9.4"
+    val kindProjector            = "0.9.5"
     val macroParadise            = "2.1.1"
   }
 
   val akkaActor                = "com.typesafe.akka"              %%  "akka-actor"                           % Versions.akka
-  val akkaCluster              = "com.typesafe.akka"              %%  "akka-cluster"                         % Versions.akka
   val akkaClusterSharding      = "com.typesafe.akka"              %%  "akka-cluster-sharding"                % Versions.akka
   val akkaPersistence          = "com.typesafe.akka"              %%  "akka-persistence"                     % Versions.akka
   val akkaPersistenceCassandra = "com.typesafe.akka"              %%  "akka-persistence-cassandra"           % Versions.akkaPersistenceCassandra
   val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
   val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query"               % Versions.akka
-  val akkaStream               = "com.typesafe.akka"              %%  "akka-stream"                          % Versions.akka
   val machinist                = "org.typelevel"                  %%  "machinist"                            % Versions.machinist
   val simulacrum               = "com.github.mpilquist"           %%  "simulacrum"                           % Versions.simulacrum
 
   // Test
   val akkaTest                 = "com.typesafe.akka"              %%  "akka-testkit"                         % Versions.akka
-  val akkaStreamTest           = "com.typesafe.akka"              %%  "akka-stream-testkit"                  % Versions.akka
-  val scalaCheck               = "org.scalacheck"                 %%  "scalacheck"                           % Versions.scalaCheck
   val scalaTest                = "org.scalatest"                  %%  "scalatest"                            % Versions.scalaTest
 
   // Compiler
