@@ -234,7 +234,7 @@ lazy val D = new {
     val simulacrum               = "0.11.0"
 
     // Test
-    val scalaTest                = "3.0.4"
+    val scalaTest                = "3.0.5"
 
     // Compiler
     val kindProjector            = "0.9.5"
