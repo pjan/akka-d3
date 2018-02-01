@@ -98,8 +98,6 @@ lazy val commonSettings = Seq(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
   scalacOptions ++= commonScalacOptions,
   libraryDependencies ++= Seq(
-    D.simulacrum,
-    D.machinist,
     compilerPlugin(D.macroParadise),
     compilerPlugin(D.kindProjector)
   ),
@@ -230,8 +228,6 @@ lazy val D = new {
     val akka                     = "2.5.9"
     val akkaPersistenceCassandra = "0.80"
     val akkaPersistenceInMemory  = "2.5.1.1"
-    val machinist                = "0.6.3"
-    val simulacrum               = "0.11.0"
 
     // Test
     val scalaTest                = "3.0.5"
@@ -247,8 +243,6 @@ lazy val D = new {
   val akkaPersistenceCassandra = "com.typesafe.akka"              %%  "akka-persistence-cassandra"           % Versions.akkaPersistenceCassandra
   val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
   val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query"               % Versions.akka
-  val machinist                = "org.typelevel"                  %%  "machinist"                            % Versions.machinist
-  val simulacrum               = "com.github.mpilquist"           %%  "simulacrum"                           % Versions.simulacrum
 
   // Test
   val akkaTest                 = "com.typesafe.akka"              %%  "akka-testkit"                         % Versions.akka
