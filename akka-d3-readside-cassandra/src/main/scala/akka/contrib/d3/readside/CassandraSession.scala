@@ -11,6 +11,7 @@ import akka.{Done, NotUsed}
 import com.datastax.driver.core._
 
 import scala.annotation.varargs
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 object CassandraSession {
@@ -153,11 +154,11 @@ final class CassandraSession private[d3] (
   def select(stmt: String, bindValues: AnyRef*): Source[Row, NotUsed] =
     delegate.select(stmt, bindValues: _*)
 
-  def selectAll(stmt: Statement): Future[Seq[Row]] =
+  def selectAll(stmt: Statement): Future[immutable.Seq[Row]] =
     delegate.selectAll(stmt)
 
   @varargs
-  def selectAll(stmt: String, bindValues: AnyRef*): Future[Seq[Row]] =
+  def selectAll(stmt: String, bindValues: AnyRef*): Future[immutable.Seq[Row]] =
     delegate.selectAll(stmt, bindValues: _*)
 
   def selectOne(stmt: Statement): Future[Option[Row]] =
