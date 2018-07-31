@@ -91,7 +91,8 @@ lazy val sharedReleaseProcess = Seq(
     setNextVersion,
     commitNextVersion,
     ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true),
-    pushChanges)
+    // pushChanges
+  )
 )
 
 lazy val commonSettings = Seq(
