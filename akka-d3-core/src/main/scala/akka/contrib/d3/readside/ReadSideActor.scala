@@ -10,6 +10,7 @@ import akka.stream.scaladsl._
 import akka.util.Timeout
 
 import scala.concurrent.duration._
+import scala.util.Failure
 
 object ReadSideActor {
   sealed trait Message extends Serializable { def name: String }
@@ -132,7 +133,16 @@ class ReadSideActor[Event <: AggregateEvent](
       case Done ⇒
         log.info("[{}] prepared for start.", name)
         val handler = processor.buildHandler()
-        handler.prepare(processor.name).map(Start) pipeTo self
+        val prepared = handler.prepare(processor.name)
+        prepared.onComplete {
+          case Failure(thr) ⇒
+            log.error("[{}] handler failed to prepare for start, {}", processor.name, thr)
+          case _ ⇒
+            if (log.isDebugEnabled)
+              log.debug("[{}] handler prepare for start successfully", processor.name)
+            else ()
+        }
+        prepared.map(Start) pipeTo self
         unstashAll()
         context.become(active(name, tag, handler))
 
