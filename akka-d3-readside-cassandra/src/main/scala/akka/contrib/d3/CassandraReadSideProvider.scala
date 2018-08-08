@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+import scala.util.Failure
 
 class CassandraReadSideProvider private[d3] (readSide: ReadSide) {
 
@@ -47,14 +48,6 @@ object CassandraReadSide {
 
     private val log = LoggerFactory.getLogger(this.getClass)
 
-    protected def invoke(handler: Handler[Event], element: EventStreamElement[Event]): Future[immutable.Seq[BoundStatement]] = {
-      for {
-        statements ← handler
-          .asInstanceOf[EventStreamElement[Event] ⇒ Future[immutable.Seq[BoundStatement]]]
-          .apply(element)
-      } yield statements :+ offsetDao.bindSaveOffset(element.offset)
-    }
-
     override def globalPrepare(): Future[Done] =
       globalPrepareCallback()
 
@@ -82,13 +75,13 @@ object CassandraReadSide {
           statements ← handler
             .asInstanceOf[EventStreamElement[Event] ⇒ Future[immutable.Seq[BoundStatement]]]
             .apply(element)
-        } yield statements :+ offsetDao.bindSaveOffset(element.offset)
+        } yield statements
       }
 
       def invokeHandler(handler: EventHandler[Event], elem: EventStreamElement[Event]): Future[Done] = {
         for {
           statements ← invoke(handler, elem)
-          done ← statements.size match {
+          _ ← statements.size match {
             case 0 ⇒ Future.successful(Done)
             case 1 ⇒ session.executeWrite(statements.head)
             case _ ⇒
@@ -98,13 +91,23 @@ object CassandraReadSide {
                 batch.add(iter.next)
               session.executeWriteBatch(batch)
           }
+          done ← offsetDao.saveOffset(elem.offset)
         } yield done
         //        invoke(handler, elem).map { _ ⇒ Done }
       }
 
       Flow[EventStreamElement[Event]].mapAsync(parallelism = 1) { elem ⇒
         handlers.get(elem.event.getClass.asInstanceOf[Class[Event]]) match {
-          case Some(handler) ⇒ invokeHandler(handler, elem)
+          case Some(handler) ⇒
+            val invocationResult = invokeHandler(handler, elem)
+            invocationResult.onComplete {
+              case Failure(thr) ⇒
+                log.error(s"${elem.event.getClass.getSimpleName} handler invocation failed, {}", thr)
+              case _ if (log.isDebugEnabled) ⇒
+                log.debug("[{}] handler invocation succeeded", elem.event.getClass.getSimpleName)
+              case _ ⇒ ()
+            }
+            invocationResult
           case None ⇒
             if (log.isDebugEnabled)
               log.debug("Unhandled event [{}]", elem.event.getClass.getName)
