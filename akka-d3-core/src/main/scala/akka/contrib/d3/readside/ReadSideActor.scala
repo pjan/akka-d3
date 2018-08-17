@@ -192,20 +192,6 @@ class ReadSideActor[Event <: AggregateEvent](
     startReceive orElse defaultReceive
   }
 
-  private def stopping(name: String): Receive = {
-    val stoppingReceive: Receive = {
-      case Done ⇒
-        log.info(s"[{}] stopped.", name)
-        unstashAll()
-        context.become(stopped)
-
-      case _ ⇒
-        stash()
-    }
-
-    stoppingReceive orElse defaultReceive
-  }
-
   private def defaultReceive: Receive = {
     case WakeUp(_) ⇒
       log.debug("Waking up")
