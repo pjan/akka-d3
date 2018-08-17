@@ -173,7 +173,7 @@ class ReadSideActor[Event <: AggregateEvent](
       case EnsureStopped(_) ⇒
         log.info("[{}] stopping.", name)
         shutdown.foreach(_.shutdown())
-        context.become(stopping(name))
+        context.become(stopped)
 
       case AttemptRewind(n, _) if n == processor.name ⇒
         sender ! Status.Failure(new IllegalStateException(s"Can't rewind when active."))
@@ -190,20 +190,6 @@ class ReadSideActor[Event <: AggregateEvent](
     }
 
     startReceive orElse defaultReceive
-  }
-
-  private def stopping(name: String): Receive = {
-    val stoppingReceive: Receive = {
-      case Done ⇒
-        log.info(s"[{}] stopped.", name)
-        unstashAll()
-        context.become(stopped)
-
-      case _ ⇒
-        stash()
-    }
-
-    stoppingReceive orElse defaultReceive
   }
 
   private def defaultReceive: Receive = {
