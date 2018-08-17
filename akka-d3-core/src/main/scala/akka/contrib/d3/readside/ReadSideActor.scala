@@ -173,7 +173,7 @@ class ReadSideActor[Event <: AggregateEvent](
       case EnsureStopped(_) ⇒
         log.info("[{}] stopping.", name)
         shutdown.foreach(_.shutdown())
-        context.become(stopping(name))
+        context.become(stopped)
 
       case AttemptRewind(n, _) if n == processor.name ⇒
         sender ! Status.Failure(new IllegalStateException(s"Can't rewind when active."))
