@@ -189,7 +189,6 @@ class ReadSideActor[Event <: AggregateEvent](
         throw new IllegalStateException(s"Stream $name terminated when it shouldn't")
 
       case Status.Failure(e) ⇒
-        unstashAll()
         throw e
     }
 
@@ -205,7 +204,7 @@ class ReadSideActor[Event <: AggregateEvent](
 
       case Status.Failure(e) ⇒
         unstashAll()
-        throw e
+        context.become(stopped)
 
       case _ ⇒
         stash()
