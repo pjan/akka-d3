@@ -23,8 +23,8 @@ lazy val tagName = Def.setting{
 
 lazy val buildSettings = Seq(
   organization := "io.pjan",
-  scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.11.12", "2.12.4")
+  scalaVersion := "2.12.7",
+  crossScalaVersions := Seq("2.11.12", "2.12.7")
 )
 
 lazy val noPublishSettings = Seq(
@@ -226,15 +226,15 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.5.9"
-    val akkaPersistenceCassandra = "0.87"
+    val akka                     = "2.5.17"
+    val akkaPersistenceCassandra = "0.91"
     val akkaPersistenceInMemory  = "2.5.1.1"
 
     // Test
     val scalaTest                = "3.0.5"
 
     // Compiler
-    val kindProjector            = "0.9.5"
+    val kindProjector            = "0.9.8"
     val macroParadise            = "2.1.1"
   }
 
