@@ -187,6 +187,9 @@ class ReadSideActor[Event <: AggregateEvent](
       case Done ⇒
         log.info("[{}] terminated when it shouldn't.", name)
         throw new IllegalStateException(s"Stream $name terminated when it shouldn't")
+
+      case Status.Failure(e) ⇒
+        throw e
     }
 
     startReceive orElse defaultReceive
@@ -196,6 +199,10 @@ class ReadSideActor[Event <: AggregateEvent](
     val stoppingReceive: Receive = {
       case Done ⇒
         log.info(s"[{}] stopped.", name)
+        unstashAll()
+        context.become(stopped)
+
+      case Status.Failure(e) ⇒
         unstashAll()
         context.become(stopped)
 
