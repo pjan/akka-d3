@@ -41,7 +41,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private val logger = LoggerFactory.getLogger(getClass.getName)
 
-  private val serialization: Serialization = SerializationExtension(system)
+  private lazy val serialization: Serialization = SerializationExtension(system)
 
   private def deserialize(bytes: Array[Byte], serializerId: Int, manifest: String): Option[AnyRef] = {
     serialization.deserialize(bytes, serializerId, manifest) match {
