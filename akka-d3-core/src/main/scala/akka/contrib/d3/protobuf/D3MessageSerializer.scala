@@ -36,14 +36,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
     extends SerializerWithStringManifest with BaseSerializer {
   import D3MessageSerializer._
 
-  @volatile
-  private var ser: Serialization = _
-  def serialization: Serialization = {
-    //scalastyle:off
-    if (ser == null) ser = SerializationExtension(system)
-    //scalastyle:on
-    ser
-  }
+  private lazy val serialization: Serialization = SerializationExtension(system)
 
   private val fromBinaryMap = collection.immutable.HashMap[String, Array[Byte] ⇒ AnyRef](
     AAGetStateManifest → aaGetStateFromBinary,
@@ -196,7 +189,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
   private def amCommandMessageFromProto(commandMessage: pm.AMCommandMessage): AggregateManager.CommandMessage = {
     val idManifest = if (commandMessage.hasIdManifest) commandMessage.getIdManifest.toStringUtf8 else ""
     val commandManifest = if (commandMessage.hasCommandManifest) commandMessage.getCommandManifest.toStringUtf8 else ""
-    val id = ser.deserialize(
+    val id = serialization.deserialize(
       commandMessage.getId.toByteArray,
       commandMessage.getIdSerializerId,
       idManifest
@@ -236,7 +229,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def amGetStateFromProto(getState: pm.AMGetState): AggregateManager.GetState = {
     val idManifest = if (getState.hasIdManifest) getState.getIdManifest.toStringUtf8 else ""
-    val id = ser.deserialize(
+    val id = serialization.deserialize(
       getState.getId.toByteArray,
       getState.getIdSerializerId,
       idManifest
@@ -271,7 +264,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def amRequestPassivationFromProto(getState: pm.AMRequestPassivation): AggregateManager.RequestPassivation = {
     val msgManifest = if (getState.hasMsgManifest) getState.getMsgManifest.toStringUtf8 else ""
-    val msg = ser.deserialize(
+    val msg = serialization.deserialize(
       getState.getMsg.toByteArray,
       getState.getMsgSerializerId,
       msgManifest
@@ -306,7 +299,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def asInitializedFromProto(initialized: pm.ASInitialized): AggregateState.Initialized[_] = {
     val stateManifest = if (initialized.hasStateManifest) initialized.getStateManifest.toStringUtf8 else ""
-    val state = ser.deserialize(
+    val state = serialization.deserialize(
       initialized.getState.toByteArray,
       initialized.getStateSerializerId,
       stateManifest
@@ -341,7 +334,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def asUninitializedFromProto(uninitialized: pm.ASUninitialized): AggregateState.Uninitialized[_] = {
     val idManifest = if (uninitialized.hasIdManifest) uninitialized.getIdManifest.toStringUtf8 else ""
-    val id = ser.deserialize(
+    val id = serialization.deserialize(
       uninitialized.getId.toByteArray,
       uninitialized.getIdSerializerId,
       idManifest
@@ -421,7 +414,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def raAttemptRewindFromProto(attemptRewind: pm.RAAttemptRewind): ReadSideActor.AttemptRewind = {
     val offsetManifest = if (attemptRewind.hasOffsetManifest) attemptRewind.getOffsetManifest.toStringUtf8 else ""
-    val offset = ser.deserialize(
+    val offset = serialization.deserialize(
       attemptRewind.getOffset.toByteArray,
       attemptRewind.getOffsetSerializerId,
       offsetManifest
@@ -507,7 +500,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def rcRewindFromProto(rewind: pm.RCRewind): ReadSideCoordinator.Rewind = {
     val offsetManifest = if (rewind.hasOffsetManifest) rewind.getOffsetManifest.toStringUtf8 else ""
-    val offset = ser.deserialize(
+    val offset = serialization.deserialize(
       rewind.getOffset.toByteArray,
       rewind.getOffsetSerializerId,
       offsetManifest
@@ -603,7 +596,7 @@ private[d3] class D3MessageSerializer(val system: ExtendedActorSystem)
 
   private def rsActiveFromProto(active: pm.RSActive): ReadSideStatus.Active = {
     val offsetManifest = if (active.hasOffsetManifest) active.getOffsetManifest.toStringUtf8 else ""
-    val offset = ser.deserialize(
+    val offset = serialization.deserialize(
       active.getOffset.toByteArray,
       active.getOffsetSerializerId,
       offsetManifest
