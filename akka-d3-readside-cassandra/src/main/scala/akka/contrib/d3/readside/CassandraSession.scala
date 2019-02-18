@@ -80,12 +80,12 @@ object CassandraSession {
           session.executeAsync(s"""
             CREATE KEYSPACE IF NOT EXISTS $keyspace
             WITH REPLICATION = { 'class' : $replicationStrategy }
-            """).asScala
+            """).asScala(ec)
         result1.flatMap { _ ⇒
-          session.executeAsync(s"USE $keyspace;").asScala
+          session.executeAsync(s"USE $keyspace;").asScala(ec)
         }.map(_ ⇒ Done)
       } else if (keyspace != "")
-        session.executeAsync(s"USE $keyspace;").asScala.map(_ ⇒ Done)
+        session.executeAsync(s"USE $keyspace;").asScala(ec).map(_ ⇒ Done)
       else
         Future.successful(Done)
     }
@@ -140,7 +140,7 @@ final class CassandraSession private[d3] (
     ec: ExecutionContext
   ): Future[Sink[T, Future[Done]]] = for {
     session ← delegate.underlying()
-    sink = CassandraSink(parallelism, statement, statementBinder)(session)
+    sink = CassandraSink(parallelism, statement, statementBinder)(session, ec)
   } yield sink
 
   @varargs
