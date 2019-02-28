@@ -231,7 +231,7 @@ lazy val D = new {
     val akkaPersistenceInMemory  = "2.5.1.1"
 
     // Test
-    val scalaTest                = "3.0.5"
+    val scalaTest                = "3.0.6"
 
     // Compiler
     val kindProjector            = "0.9.8"
