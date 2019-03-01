@@ -56,6 +56,11 @@ private[d3] final class ReadSideCoordinator(
   case object Tick extends DeadLetterSuppression
 
   // Lifecycle
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    log.error("Restarting due to exception", reason)
+    super.preRestart(reason, message)
+  }
+
   override def postStop(): Unit = {
     tick.cancel()
     ()
