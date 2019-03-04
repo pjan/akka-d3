@@ -28,7 +28,7 @@ private[cassandra] final class CassandraSourceStage(
 
         (for {
           statement ← futureStatement
-          resultSet ← session.executeAsync(statement).asScala()
+          resultSet ← session.executeAsync(statement).asScala(ec)
         } yield resultSet).onComplete(futureFetchedCallback.invoke)
       }
 
@@ -43,7 +43,7 @@ private[cassandra] final class CassandraSourceStage(
             case Some(resultSet) if resultSet.isExhausted                     ⇒ completeStage()
             case Some(resultSet) ⇒
               // fetch next page
-              val futureResultSet = resultSet.fetchMoreResults().asScala()
+              val futureResultSet = resultSet.fetchMoreResults().asScala(ec)
               futureResultSet.onComplete(futureFetchedCallback.invoke)
             case None ⇒ () // doing nothing, waiting for futureResultSet in preStart() to be completed
           }

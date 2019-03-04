@@ -51,6 +51,11 @@ class ReadSideActor[Event <: AggregateEvent](
     if (settings.autoStart) coordinator ! ReadSideCoordinator.Start(processor.name)
   }
 
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    log.error("Restarting due to exception", reason)
+    super.preRestart(reason, message)
+  }
+
   override def postStop: Unit = {
     tick.cancel()
     shutdown.foreach(_.shutdown())

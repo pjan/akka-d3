@@ -4,6 +4,7 @@ import SbtPrompt.autoImport._
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import ReleaseTransformations._
+import sbt.{Credentials, Path, ScmInfo}
 
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 import scalariform.formatter.preferences.AlignSingleLineCaseStatements.MaxArrowIndent
@@ -22,7 +23,7 @@ lazy val tagName = Def.setting{
 }
 
 lazy val buildSettings = Seq(
-  organization := "io.pjan",
+  organization := "com.paidy",
   scalaVersion := "2.12.7",
   crossScalaVersions := Seq("2.11.12", "2.12.7")
 )
@@ -39,42 +40,38 @@ lazy val noTests = Seq(
 )
 
 lazy val publishSettings = Seq(
-  homepage := Some(url("https://github.com/pjan/akka-d3")),
+  homepage := Some(url("https://github.com/paidy/akka-d3")),
   licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
-  scmInfo := Some(ScmInfo(url("https://github.com/pjan/akka-d3"), "scm:git:git@github.com:pjan/akka-d3.git")),
-  autoAPIMappings := true,
-  pomExtra :=
-    <developers>
-      <developer>
-        <id>pjan</id>
-        <name>pjan vandaele</name>
-        <url>https://github.com/pjan/</url>
-      </developer>
-    </developers>
+  scmInfo := Some(
+    ScmInfo(
+      url("https://github.com/paidy/akka-d3"),
+      "scm:git:git@github.com:paidy/akka-d3.git"
+    )
+  ),
+  autoAPIMappings := true
 ) ++ credentialSettings ++ sharedPublishSettings ++ sharedReleaseProcess
 
 lazy val credentialSettings = Seq(
-  // For Travis CI - see http://www.cakesolutions.net/teamblogs/publishing-artefacts-to-oss-sonatype-nexus-using-sbt-and-travis-ci
   credentials ++= (for {
-    username <- Option(System.getenv().get("SONATYPE_USERNAME"))
-    password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
-  } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq
+    username ← Option(System.getenv().get("PAIDY_NEXUS_USERNAME"))
+    password ← Option(System.getenv().get("PAIDY_NEXUS_PASSWORD"))
+  } yield Credentials("Sonatype Nexus Repository Manager", "nexus.test.paidy.io", username, password)).toSeq,
+  credentials += Credentials.apply(Path.userHome / ".ivy2" / ".credentials"),
+  coursierUseSbtCredentials := true
 )
 
 lazy val sharedPublishSettings = Seq(
-  useGpg := true,
   releaseCrossBuild := true,
   releaseTagName := tagName.value,
-  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,
   publishArtifact in Test := false,
   pomIncludeRepository := Function.const(false),
   publishTo := {
-    val nexus = "https://oss.sonatype.org/"
+    val nexus = "https://nexus.test.paidy.io/nexus/"
     if (isSnapshot.value)
-      Some("Snapshots" at nexus + "content/repositories/snapshots")
+      Some("snapshots" at nexus + "content/repositories/snapshots")
     else
-      Some("Releases" at nexus + "service/local/staging/deploy/maven2")
+      Some("releases" at nexus + "content/repositories/releases")
   }
 )
 
@@ -83,15 +80,14 @@ lazy val sharedReleaseProcess = Seq(
     checkSnapshotDependencies,
     inquireVersions,
     runClean,
-    releaseStepCommand("build"),
+    releaseStepCommandAndRemaining("+build"),
     setReleaseVersion,
     commitReleaseVersion,
     tagRelease,
-    publishArtifacts,
+    releaseStepCommandAndRemaining("+publish"),
     setNextVersion,
     commitNextVersion,
-    ReleaseStep(action = Command.process("sonatypeReleaseAll", _), enableCrossBuild = true)
-    // pushChanges
+    pushChanges
   )
 )
 
@@ -104,7 +100,7 @@ lazy val commonSettings = Seq(
   ),
   fork in test := true,
   parallelExecution in Test := false,
-  scalacOptions in (Compile, doc) := (scalacOptions in (Compile, doc)).value.filter(_ != "-Xfatal-warnings"),
+  scalacOptions in Compile := (scalacOptions in Compile).value.filter(_ != "-Xfatal-warnings"),
   // workaround for https://github.com/scalastyle/scalastyle-sbt-plugin/issues/47
   scalastyleSources in Compile ++= (unmanagedSourceDirectories in Compile).value
 ) ++ warnUnusedImport
@@ -194,29 +190,6 @@ lazy val wartRemoverSettings = Seq(
   wartremoverErrors ++= Warts.unsafe
 )
 
-lazy val micrositesSettings = Seq(
-  micrositeName := "akka-d3",
-  micrositeDescription := "Library for Domain Driven Design, embracing Event Sourcing and CQRS, on top of Akka",
-  micrositeBaseUrl := "akka-d3",
-  micrositeDocumentationUrl := "/akka-d3/docs/",
-  micrositeGithubOwner := "pjan",
-  micrositeGithubRepo := "akka-d3",
-  micrositeAuthor := "pjan",
-  micrositeHighlightTheme := "solarized-dark",
-  includeFilter in makeSite := "*.html" | "*.css" | "*.png" | "*.jpg" | "*.gif" | "*.js" | "*.md"
-)
-
-lazy val buildInfoSettings = Seq(
-  buildInfoKeys := Seq[BuildInfoKey](
-    name,
-    version,
-    scalaVersion,
-    sbtVersion,
-    "lastTag" -> git.gitDescribedVersion.value.get.takeWhile(_ != '-')
-  ),
-  buildInfoPackage := "akka.contrib.d3"
-)
-
 lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ formatSettings ++ promptSettings ++ scoverageSettings
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,8 +199,8 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.5.17"
-    val akkaPersistenceCassandra = "0.91"
+    val akka                     = "2.5.19"
+    val akkaPersistenceCassandra = "0.92"
     val akkaPersistenceInMemory  = "2.5.1.1"
 
     // Test
@@ -244,6 +217,7 @@ lazy val D = new {
   val akkaPersistenceCassandra = "com.typesafe.akka"              %%  "akka-persistence-cassandra"           % Versions.akkaPersistenceCassandra
   val akkaPersistenceInMemory  = "com.github.dnvriend"            %%  "akka-persistence-inmemory"            % Versions.akkaPersistenceInMemory
   val akkaPersistenceQuery     = "com.typesafe.akka"              %%  "akka-persistence-query"               % Versions.akka
+  val akkaSlf4j                = "com.typesafe.akka"              %% "akka-slf4j"                            % Versions.akka
 
   // Test
   val akkaTest                 = "com.typesafe.akka"              %%  "akka-testkit"                         % Versions.akka
@@ -276,30 +250,19 @@ lazy val d3 = project.in(file(".d3"))
   .aggregate(core, cluster)
   .dependsOn(core, cluster)
 
-lazy val docs = Project(
-    id = "docs",
-    base = file("docs")
-  )
-  .settings(moduleName := "docs")
-  .settings(d3Settings)
-  .settings(micrositesSettings)
-  .settings(buildInfoSettings)
-  .dependsOn(root)
-  .enablePlugins(MicrositesPlugin)
-  .enablePlugins(BuildInfoPlugin)
-
 lazy val core = Project(
     id = "core",
     base = file("akka-d3-core")
   )
   .settings(moduleName := "akka-d3-core")
   .settings(
-  	libraryDependencies ++= Seq(
-  	  D.akkaActor,
-  	  D.akkaPersistence,
+    libraryDependencies ++= Seq(
+      D.akkaActor,
+      D.akkaPersistence,
       D.akkaPersistenceQuery,
-  	  D.akkaTest % "test",
-  	  D.scalaTest % "test",
+      D.akkaSlf4j,
+      D.akkaTest % "test",
+      D.scalaTest % "test",
       D.akkaPersistenceInMemory % "test"
   	)
   )
@@ -376,4 +339,4 @@ addCommandAlias("gitSnapshots", ";set version in ThisBuild := git.gitDescribedVe
 
 addCommandAlias("build", ";clean;scalariformFormat;scalastyle;protobufGenerate;test")
 
-addCommandAlias("validate", ";clean;scalastyle;protobufGenerate;test;docs/makeMicrosite")
+addCommandAlias("validate", ";clean;scalastyle;protobufGenerate;test")

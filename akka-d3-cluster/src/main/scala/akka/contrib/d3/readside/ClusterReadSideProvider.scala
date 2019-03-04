@@ -24,7 +24,7 @@ private[d3] final class ClusterReadSideProvider(
       minBackoff = minBackoff,
       maxBackoff = maxBackoff,
       randomFactor = randomBackoffFactor,
-      strategy = SupervisorStrategy.stoppingStrategy
+      strategy = SupervisorStrategy.defaultStrategy
     )
 
     val singletonProps = ClusterSingletonManager.props(
