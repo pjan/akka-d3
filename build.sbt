@@ -226,7 +226,7 @@ lazy val d3Settings = buildSettings ++ commonSettings ++ publishSettings ++ form
 lazy val D = new {
 
   val Versions = new {
-    val akka                     = "2.5.17"
+    val akka                     = "2.5.22"
     val akkaPersistenceCassandra = "0.91"
     val akkaPersistenceInMemory  = "2.5.1.1"
 
