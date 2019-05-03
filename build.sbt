@@ -227,7 +227,7 @@ lazy val D = new {
 
   val Versions = new {
     val akka                     = "2.5.17"
-    val akkaPersistenceCassandra = "0.91"
+    val akkaPersistenceCassandra = "0.96"
     val akkaPersistenceInMemory  = "2.5.1.1"
 
     // Test
