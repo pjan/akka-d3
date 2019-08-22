@@ -234,7 +234,7 @@ lazy val D = new {
     val scalaTest                = "3.0.5"
 
     // Compiler
-    val kindProjector            = "0.9.8"
+    val kindProjector            = "0.10.0"
     val macroParadise            = "2.1.1"
   }
 
@@ -250,7 +250,7 @@ lazy val D = new {
   val scalaTest                = "org.scalatest"                  %%  "scalatest"                            % Versions.scalaTest
 
   // Compiler
-  val kindProjector            = "org.spire-math"                 %%  "kind-projector"                       % Versions.kindProjector // cross CrossVersion.full
+  val kindProjector            = "org.typelevel"                 %%  "kind-projector"                       % Versions.kindProjector // cross CrossVersion.full
   val macroParadise            = "org.scalamacros"                %%  "paradise"                             % Versions.macroParadise  cross CrossVersion.full
 
 }
